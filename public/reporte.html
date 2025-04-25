@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Conversaciones esac</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            esac: {
+              green: '#6b8a6b',
+              lightgreen: '#7a9a7a',
+              darkgreen: '#5c7a5c',
+              red: '#f8d7da',
+              redtext: '#dc3545',
+              lightgray: '#f8f9fa',
+              orange: '#fd7e14',
+              lightorange: '#ffecb5'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+<link rel="icon" type="image/png"  href="./assets/img/legaxxi.png" />
+
+
+</head>
+<body>
+  <!-- Header con el estilo de esac -->
+  <header class="bg-esac-green text-white py-4 px-6 shadow-md">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <img 
+        src="./assets/img/legaxxi-white.png" 
+        alt="Logo de Legaxxi" 
+        width="40" 
+        height="40" 
+        class="logo-image"
+      />
+      
+      <div class="bg-white/20 px-4 py-2 rounded-full text-sm">
+        Asistente de Legaxxi
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- Título del reporte -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="text-esac-green">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-700">Reporte de Conversaciones</h2>
+      </div>
+      <button id="exportCsv" class="bg-esac-green hover:bg-esac-darkgreen text-white px-4 py-2 rounded-full transition-colors duration-200 flex items-center space-x-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>Exportar a CSV</span>
+      </button>
+    </div>
+
+    <!-- Filtros con diseño mejorado -->
+    <div class="bg-white rounded-lg shadow-md p-5 mb-8">
+      <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        Filtros de Reporte
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Filtrar por año:</label>
+          <select id="yearFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-esac-green focus:border-esac-green transition-all duration-200">
+            <option value="">Todos los años</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Filtrar por mes:</label>
+          <select id="monthFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-esac-green focus:border-esac-green transition-all duration-200">
+            <option value="">Todos los meses</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Filtrar por día:</label>
+          <select id="dayFilter" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-esac-green focus:border-esac-green transition-all duration-200">
+            <option value="">Todos los días</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Registros por página:</label>
+          <select id="pageSize" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-esac-green focus:border-esac-green transition-all duration-200">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button id="applyFilters" class="w-full bg-esac-green hover:bg-esac-darkgreen text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Aplicar Filtros
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjetas de resumen con animación al pasar el mouse -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-5 card-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm uppercase text-gray-500 font-medium">Total de conversaciones</div>
+            <div id="totalConversations" class="text-2xl font-bold text-esac-green mt-1">–</div>
+          </div>
+          <div class="bg-esac-green/10 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-5 card-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm uppercase text-gray-500 font-medium">Total de interacciones</div>
+            <div id="totalInteractions" class="text-2xl font-bold text-esac-green mt-1">–</div>
+          </div>
+          <div class="bg-esac-green/10 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-5 card-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm uppercase text-gray-500 font-medium">Total de acuerdos de pago</div>
+            <div id="totalAgreements" class="text-2xl font-bold text-esac-green mt-1">–</div>
+          </div>
+          <div class="bg-esac-green/10 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-5 card-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm uppercase text-gray-500 font-medium">Recuperación estimada</div>
+            <div id="totalRecovery" class="text-2xl font-bold text-esac-green mt-1">–</div>
+          </div>
+          <div class="bg-esac-green/10 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-5 card-hover">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm uppercase text-gray-500 font-medium">Conversaciones &gt; 2</div>
+            <div id="overTwo" class="text-2xl font-bold text-esac-green mt-1">–</div>
+          </div>
+          <div class="bg-esac-green/10 p-3 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de conversaciones con diseño mejorado -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+      <div class="p-4 bg-esac-green/10 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-700 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-esac-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Listado de Conversaciones
+        </h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mensajes</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acuerdo de Pago</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recuperación Estimada</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interacciones</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contrato</th>
+            </tr>
+          </thead>
+          <tbody id="convTable" class="bg-white divide-y divide-gray-200">
+            <!-- Filas generadas por JS -->
+            <tr class="animate-pulse">
+              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                <div class="flex justify-center">
+                  <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-esac-green"></div>
+                  <span class="ml-2">Cargando datos...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paginación con diseño mejorado -->
+    <div class="flex justify-between items-center mt-6">
+      <div class="text-sm text-gray-600">
+        <span id="pageInfo">Mostrando página 1</span>
+      </div>
+      <div id="pagination" class="flex space-x-2"></div>
+    </div>
+  </div>
+
+  <!-- Modal de detalle de conversación con diseño mejorado -->
+  <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 modal-transition">
+    <div class="bg-white w-11/12 max-w-2xl rounded-lg shadow-2xl flex flex-col">
+      <div class="bg-esac-green text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+        <h2 class="text-xl font-semibold flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          Detalle de Conversación
+        </h2>
+        <button id="closeModal" class="text-white hover:text-gray-200 transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-2 bg-gray-100 flex-1">
+        <div id="modalBody" class="p-4 bg-gray-100 h-96 overflow-y-auto space-y-4">
+          <!-- Burbujas de chat generadas por JS -->
+          <div class="flex justify-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-esac-green"></div>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-4 bg-gray-50 rounded-b-lg border-t border-gray-200">
+        <div class="flex justify-end">
+          <button id="closeModalBtn" class="bg-esac-green hover:bg-esac-darkgreen text-white font-medium py-2 px-4 rounded-full transition-colors duration-200">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const yearFilter = document.getElementById('yearFilter');
+    const monthFilter = document.getElementById('monthFilter');
+    const dayFilter = document.getElementById('dayFilter');
+    const pageSize = document.getElementById('pageSize');
+    const applyFilters = document.getElementById('applyFilters');
+    const exportCsv = document.getElementById('exportCsv');
+    const totalConvos = document.getElementById('totalConversations');
+    const totalInts = document.getElementById('totalInteractions');
+    const totalAgs = document.getElementById('totalAgreements');
+    const totalRec = document.getElementById('totalRecovery');
+    const overTwo = document.getElementById('overTwo');
+    const convTable = document.getElementById('convTable');
+    const pagination = document.getElementById('pagination');
+    const pageInfo = document.getElementById('pageInfo');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('modalBody');
+    const closeModal = document.getElementById('closeModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    let currentPage = 1;
+    let lastSuccessfulYear = null;
+
+    // Función para obtener el estado de acuerdo de pago como texto
+    function getPaymentAgreementStatus(status) {
+      switch(parseInt(status)) {
+        case 0:
+          return { text: 'No', class: 'bg-gray-100 text-gray-800' };
+        case 1:
+          return { text: 'Sí', class: 'bg-esac-green/20 text-esac-green' };
+        case 2:
+          return { text: 'Renegociación', class: 'bg-esac-orange/20 text-esac-orange' };
+        default:
+          return { text: 'Sin Verificar', class: 'bg-gray-100 text-gray-800 bg-esac-red' };
+      }
+    }
+
+    // Función para resaltar texto marcado
+    function highlightMarkedText(text) {
+      // Buscar texto entre ** para marcarlo
+      return text.replace(/\*\*(.*?)\*\*/g, '<span class="marked-text">$1</span>');
+    }
+
+    // Rellenar filtros de año, mes y día
+    (function initFilters() {
+      // Añadir años (desde 2020 hasta el año actual)
+      const currentYear = new Date().getFullYear();
+      lastSuccessfulYear = currentYear; // Inicializar con el año actual
+      
+      for (let y = currentYear; y >= 2020; y--) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearFilter.appendChild(opt);
+      }
+      
+      // Añadir meses
+      for (let m = 1; m <= 12; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = new Date(0, m - 1).toLocaleString('es', { month: 'long' });
+        monthFilter.appendChild(opt);
+      }
+      
+      // Añadir días
+      for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        dayFilter.appendChild(opt);
+      }
+    })();
+
+    // Función para cargar el reporte desde la API
+    async function loadReport() {
+      // Mostrar un estado de carga
+      convTable.innerHTML = `
+        <tr class="animate-pulse">
+          <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex justify-center">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-esac-green"></div>
+              <span class="ml-2">Cargando datos...</span>
+            </div>
+          </td>
+        </tr>
+      `;
+
+      // Guardar el año seleccionado para verificar si hay datos
+      const selectedYear = yearFilter.value || new Date().getFullYear().toString();
+
+      const params = new URLSearchParams({
+        year: selectedYear,
+        month: monthFilter.value,
+        day: dayFilter.value,
+        page: currentPage,
+        size: pageSize.value
+      });
+
+      try {
+        // 1) Obtener resumen
+        const sumRes = await fetch(`/api/reports?${params}`);
+        const summary = await sumRes.json();
+        
+        // Si llegamos aquí, la solicitud fue exitosa, actualizar el último año exitoso
+        lastSuccessfulYear = selectedYear;
+        
+        totalConvos.textContent = summary.totalConversations.toLocaleString();
+        totalInts.textContent = summary.totalInteractions.toLocaleString();
+        totalAgs.textContent = summary.totalAgreements.toLocaleString();
+        
+        const recov = Number(summary.totalRecovery) || 0;
+        totalRec.textContent = `$${recov.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        
+        overTwo.textContent = summary.overTwo.toLocaleString();
+
+        // 2) Obtener conversaciones
+        const convRes = await fetch(`/api/conversations?${params}`);
+        const { rows, totalPages } = await convRes.json();
+        
+        convTable.innerHTML = '';
+        
+        if (rows.length === 0) {
+          convTable.innerHTML = `
+            <tr>
+              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                No se encontraron resultados para los filtros seleccionados
+              </td>
+            </tr>
+          `;
+        } else {
+          rows.forEach((c, index) => {
+            const tr = document.createElement('tr');
+            tr.className = 'table-row hover:bg-gray-50';
+            
+            const paymentStatus = getPaymentAgreementStatus(c.payment_agreement);
+            
+            tr.innerHTML = `
+              <td class="px-6 py-4 whitespace-nowrap">${c.id}</td>
+              <td class="px-6 py-4 whitespace-nowrap">${new Date(c.last_update).toLocaleString()}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <button data-uuid="${c.uuid}" class="view-btn bg-esac-green hover:bg-esac-darkgreen text-white px-3 py-1.5 rounded-full transition-colors duration-200 text-sm flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-lin  stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Ver
+                </button>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 text-xs font-medium rounded-full ${paymentStatus.class}">
+                  ${paymentStatus.text}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap font-medium ${parseInt(c.payment_agreement) > 0 ? 'text-esac-green' : 'text-gray-500'}">
+                $${(+c.estimated_recovery).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <span class="font-medium">${c.total_interactions}</span>
+                  ${c.total_interactions > 3 ? 
+                    `<span class="ml-2 px-1.5 py-0.5 text-xs font-medium bg-esac-green/20 text-esac-green rounded-full">Alto</span>` : ''}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700">${c.contract_number || '-'}</td>
+            `;
+            convTable.appendChild(tr);
+          });
+        }
+
+        // 3) Actualizar paginación
+        pagination.innerHTML = '';
+        pageInfo.textContent = `Mostrando página ${currentPage} de ${totalPages}`;
+        
+        // Botón anterior
+        if (currentPage > 1) {
+          const prevBtn = document.createElement('button');
+          prevBtn.className = 'pagination-btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-full font-medium transition-colors duration-200';
+          prevBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          `;
+          prevBtn.onclick = () => { currentPage--; loadReport(); };
+          pagination.appendChild(prevBtn);
+        }
+        
+        // Botones de página
+        for (let p = 1; p <= totalPages; p++) {
+          // Mostrar solo algunas páginas para no sobrecargar la UI
+          if (
+            p === 1 || 
+            p === totalPages || 
+            (p >= currentPage - 1 && p <= currentPage + 1)
+          ) {
+            const btn = document.createElement('button');
+            btn.textContent = p;
+            btn.className = `pagination-btn px-4 py-2 rounded-full font-medium transition-colors duration-200 ${
+              p === currentPage 
+                ? 'bg-esac-green text-white' 
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`;
+            btn.disabled = p === currentPage;
+            btn.onclick = () => { currentPage = p; loadReport(); };
+            pagination.appendChild(btn);
+          } else if (
+            (p === currentPage - 2 && currentPage > 3) || 
+            (p === currentPage + 2 && currentPage < totalPages - 2)
+          ) {
+            // Agregar puntos suspensivos
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.className = 'px-3 py-2 text-gray-500';
+            pagination.appendChild(ellipsis);
+          }
+        }
+        
+        // Botón siguiente
+        if (currentPage < totalPages) {
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'pagination-btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-full font-medium transition-colors duration-200';
+          nextBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          `;
+          nextBtn.onclick = () => { currentPage++; loadReport(); };
+          pagination.appendChild(nextBtn);
+        }
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        
+        // Si hay un error y el año seleccionado no es el último año exitoso,
+        // intentar cargar datos del último año exitoso
+        if (selectedYear !== lastSuccessfulYear && lastSuccessfulYear) {
+          yearFilter.value = lastSuccessfulYear;
+          loadReport();
+          return;
+        }
+        
+        convTable.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-6 py-4 text-center text-red-500">
+              Error al cargar los datos. Posiblemente no existan datos en el filtro seleccionado, en caso de existir y persista el problema contáctanos.
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Exportar a CSV
+    exportCsv.onclick = () => {
+      const year = yearFilter.value;
+      const month = monthFilter.value;
+      const day = dayFilter.value;
+      
+      // Redireccionar a la API de exportación
+      window.location = `/api/export?year=${year}&month=${month}&day=${day}`;
+    };
+
+    // Eventos de filtro
+    applyFilters.addEventListener('click', () => { 
+      currentPage = 1; 
+      loadReport(); 
+    });
+
+    // También aplicar filtros cuando cambian los selectores
+    [yearFilter, monthFilter, dayFilter, pageSize].forEach(el =>
+      el.addEventListener('change', () => { 
+        currentPage = 1; 
+        loadReport(); 
+      })
+    );
+
+    // Delegar evento "Ver" para mostrar modal
+    convTable.addEventListener('click', async e => {
+      if (!e.target.closest('.view-btn')) return;
+      
+      const uuid = e.target.closest('.view-btn').dataset.uuid;
+      
+      // Mostrar modal con indicador de carga
+      modalOverlay.classList.remove('hidden');
+      modalOverlay.classList.add('flex');
+      modalBody.innerHTML = `
+        <div class="flex justify-center items-center h-full">
+          <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-esac-green"></div>
+        </div>
+      `;
+      
+      try {
+        // Obtener mensajes de la conversación
+        const msgRes = await fetch(`/api/conversations/${uuid}/messages`);
+        const msgs = await msgRes.json();
+        
+        modalBody.innerHTML = '';
+        
+        if (msgs.length === 0) {
+          modalBody.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+              No se encontraron mensajes para esta conversación.
+            </div>
+          `;
+        } else {
+          msgs.forEach((m, index) => {
+            const div = document.createElement('div');
+            div.className = `chat-bubble p-4 rounded-lg mb-3 ${
+              m.role === 'Cliente' 
+                ? 'bg-esac-green/10 text-gray-800 ml-auto max-w-[80%]' 
+                : 'bg-white text-gray-800 border border-gray-200 max-w-[80%]'
+            }`;
+            div.style.animationDelay = `${index * 100}ms`;
+            
+            const roleSpan = document.createElement('div');
+            roleSpan.className = `text-xs font-semibold mb-1 ${
+              m.role === 'Cliente' ? 'text-esac-green' : 'text-gray-500'
+            }`;
+            roleSpan.textContent = m.role;
+            
+            const messageP = document.createElement('p');
+            // Aplicar resaltado de texto marcado
+            messageP.innerHTML = highlightMarkedText(m.message);
+            
+            div.appendChild(roleSpan);
+            div.appendChild(messageP);
+            modalBody.appendChild(div);
+          });
+        }
+      } catch (error) {
+        console.error("Error al cargar mensajes:", error);
+        modalBody.innerHTML = `
+          <div class="text-center text-red-500 py-4">
+            Error al cargar los mensajes. Posiblemente no existan mensajes en el chat seleccionado, en caso de existir y persista el problema contáctanos.
+          </div>
+        `;
+      }
+    });
+
+    // Cerrar modal
+    [closeModal, closeModalBtn].forEach(btn => {
+      btn.onclick = () => {
+        modalOverlay.classList.add('hidden');
+        modalOverlay.classList.remove('flex');
+      };
+    });
+
+    // Cerrar modal al hacer clic fuera
+    modalOverlay.addEventListener('click', e => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.add('hidden');
+        modalOverlay.classList.remove('flex');
+      }
+    });
+
+    // Carga inicial
+    loadReport();
+  </script>
+</body>
+</html>

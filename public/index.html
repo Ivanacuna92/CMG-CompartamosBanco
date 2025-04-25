@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nyssin NRFM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0f0f0; padding: 20px; }
+    .chat-container { width: 100%; max-width: 450px; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; margin-bottom: 20px; }
+    .chat-header { background-color: #6f9b7b; padding: 20px; display: flex; align-items: center; gap: 10px; }
+    .logo { width: 42px; height: 42px; }
+    .chat-header h1 { color: white; font-size: 28px; font-weight: 600; }
+    .chat-content { flex: 1; display: flex; flex-direction: column; padding: 0 25px; }
+    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; margin-top: 20px; scroll-behavior: smooth; }
+    .typing-indicator { display: none; align-self: flex-start; margin-bottom: 10px; }
+    .typing-indicator-dots { background-color: #9eb0a2; padding: 10px 14px; border-radius: 18px; border-top-left-radius: 4px; display: flex; align-items: center; }
+    .typing-indicator-dots span { height: 8px; width: 8px; margin: 0 2px; background-color: #fff; border-radius: 50%; opacity: 0.4; }
+    .typing-indicator-dots span:nth-of-type(1) { animation: 1s blink infinite 0.3333s; }
+    .typing-indicator-dots span:nth-of-type(2) { animation: 1s blink infinite 0.6666s; }
+    .typing-indicator-dots span:nth-of-type(3) { animation: 1s blink infinite 0.9999s; }
+    @keyframes blink { 50% { opacity: 1; } }
+    .chat-input { display: flex; padding: 15px; border-top: 1px solid #eee; gap: 10px; }
+    #messageInput { flex: 1; padding: 15px 20px; border: 1px solid #ddd; border-radius: 30px; font-size: 16px; outline: none; color: #666; }
+    #sendBtn { background: #c90c41; color: white; border: none; padding: 0 30px; border-radius: 30px; font-size: 16px; font-weight: 500; cursor: pointer; }
+    .message { display: flex; margin-bottom: 10px; width: 100%; }
+    .user { justify-content: flex-end; }
+    .bot { justify-content: flex-start; }
+    .bubble { max-width: 80%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
+    .user .bubble { background: #f3f4f6; color: #333; border-top-right-radius: 4px; }
+    .bot .bubble { background: #9eb0a2; color: white; border-top-left-radius: 4px; }
+    .chat-link { color: #fff; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <img src="./assets/img/legaxxi-white.png" alt="Logo" class="logo">
+      <h1>Nyssin</h1>
+    </div>
+    <div class="chat-content">
+      <div id="chatMessages" class="chat-messages">
+        <div class="typing-indicator" id="typing-indicator">
+          <div class="typing-indicator-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Ingresa tu respuesta..." autocomplete="off">
+        <button id="sendBtn">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let userId = null;
+    const chatMessages    = document.getElementById("chatMessages");
+    const messageInput    = document.getElementById("messageInput");
+    const sendBtn         = document.getElementById("sendBtn");
+    const typingIndicator = document.getElementById("typing-indicator");
+
+    function parseMarkdown(text) {
+      text = text.replace(/\n\n/g, '</p><p>');
+      text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="chat-link" target="_blank">$1</a>');
+      text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="chat-link" target="_blank">$1</a>');
+      text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+      text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+      text = text.replace(/\n/g, '<br>');
+      return text;
+    }
+
+    function addMessage(text, sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", sender);
+      const bubble = document.createElement("div");
+      bubble.classList.add("bubble");
+      bubble.innerHTML = sender === "bot" ? parseMarkdown(text) : text;
+      msgDiv.appendChild(bubble);
+      chatMessages.insertBefore(msgDiv, typingIndicator);
+      setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 10);
+    }
+
+    function addInteractive(inter) {
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
+      const msgDiv = document.createElement("div");
+      msgDiv.classList.add("message", "bot");
+      const bubble = document.createElement("div"); bubble.classList.add("bubble");
+      bubble.innerHTML = parseMarkdown(inter.interactive.body.text);
+      msgDiv.appendChild(bubble);
+
+      const btnRow = document.createElement("div");
+      btnRow.style.display = "flex";
+      btnRow.style.gap = "10px";
+      btnRow.style.marginTop = "8px";
+
+      inter.interactive.action.buttons.forEach(b => {
+        const btn = document.createElement("button");
+        btn.textContent = b.reply.title;
+        btn.style.flex = "1";
+        btn.style.padding = "8px";
+        btn.style.borderRadius = "20px";
+        btn.style.border = "none";
+        btn.style.background = "#6f9b7b";
+        btn.style.color = "#fff";
+        btn.style.cursor = "pointer";
+        btn.onclick = () => {
+          btnRow.querySelectorAll('button').forEach(x => x.disabled = true);
+          addMessage(b.reply.title, "user");
+          sendMessage(b.reply.id).then(handleBotReply);
+        };
+        btnRow.appendChild(btn);
+      });
+
+      msgDiv.appendChild(btnRow);
+      chatMessages.insertBefore(msgDiv, typingIndicator);
+      setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 10);
+    }
+
+    function handleBotReply(data) {
+      typingIndicator.style.display = "none";
+      if (data && typeof data === "object" && data.type === "interactive") {
+        addInteractive(data);
+      } else {
+        addMessage(data, "bot");
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    }
+
+    async function sendMessage(msg) {
+      typingIndicator.style.display = "block";
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, message: msg })
+      });
+      const json = await res.json();
+      userId = json.userId;
+      return json.response;
+    }
+
+    // On page load: fetch initial greeting
+    window.addEventListener("DOMContentLoaded", async () => {
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
+      try {
+        const res = await fetch("/new", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        userId = data.userId;
+        addMessage(data.response, "bot");
+      } catch {
+        addMessage("Lo siento, no pude iniciar la conversación.", "bot");
+      } finally {
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    });
+
+    sendBtn.addEventListener("click", async () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      addMessage(text, "user");
+      messageInput.value = "";
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
+      try {
+        const reply = await sendMessage(text);
+        handleBotReply(reply);
+      } catch {
+        handleBotReply("Lo siento, ocurrió un error. Intenta de nuevo.");
+      }
+    });
+
+    messageInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+
+    new MutationObserver(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }).observe(chatMessages, { childList: true, subtree: true });
+  </script>
+</body>
+</html>

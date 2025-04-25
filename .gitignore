@@ -1,0 +1,11 @@
+# Dependencias
+node_modules/
+# Archivos de sesión o DB sensible
+sessions.db
+# Logs
+*.log
+# Otras carpetas de build/cobertura
+build/
+coverage/
+package-lock.json
+.env
