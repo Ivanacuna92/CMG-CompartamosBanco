@@ -3,41 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nyssin NRFM</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f0f0f0; padding: 20px; }
-    .chat-container { width: 100%; max-width: 450px; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; margin-bottom: 20px; }
-    .chat-header { background-color: #6f9b7b; padding: 20px; display: flex; align-items: center; gap: 10px; }
-    .logo { width: 42px; height: 42px; }
-    .chat-header h1 { color: white; font-size: 28px; font-weight: 600; }
-    .chat-content { flex: 1; display: flex; flex-direction: column; padding: 0 25px; }
-    .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; margin-top: 20px; scroll-behavior: smooth; }
-    .typing-indicator { display: none; align-self: flex-start; margin-bottom: 10px; }
-    .typing-indicator-dots { background-color: #9eb0a2; padding: 10px 14px; border-radius: 18px; border-top-left-radius: 4px; display: flex; align-items: center; }
-    .typing-indicator-dots span { height: 8px; width: 8px; margin: 0 2px; background-color: #fff; border-radius: 50%; opacity: 0.4; }
-    .typing-indicator-dots span:nth-of-type(1) { animation: 1s blink infinite 0.3333s; }
-    .typing-indicator-dots span:nth-of-type(2) { animation: 1s blink infinite 0.6666s; }
-    .typing-indicator-dots span:nth-of-type(3) { animation: 1s blink infinite 0.9999s; }
-    @keyframes blink { 50% { opacity: 1; } }
-    .chat-input { display: flex; padding: 15px; border-top: 1px solid #eee; gap: 10px; }
-    #messageInput { flex: 1; padding: 15px 20px; border: 1px solid #ddd; border-radius: 30px; font-size: 16px; outline: none; color: #666; }
-    #sendBtn { background: #c90c41; color: white; border: none; padding: 0 30px; border-radius: 30px; font-size: 16px; font-weight: 500; cursor: pointer; }
-    .message { display: flex; margin-bottom: 10px; width: 100%; }
-    .user { justify-content: flex-end; }
-    .bot { justify-content: flex-start; }
-    .bubble { max-width: 80%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
-    .user .bubble { background: #f3f4f6; color: #333; border-top-right-radius: 4px; }
-    .bot .bubble { background: #9eb0a2; color: white; border-top-left-radius: 4px; }
-    .chat-link { color: #fff; text-decoration: underline; }
-  </style>
+  <title>Stori - Bot</title>
+  <link rel="stylesheet"  href="./assets/css/index.css" />
 </head>
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      <img src="./assets/img/legaxxi-white.png" alt="Logo" class="logo">
-      <h1>Nyssin</h1>
+      <img src="./assets/img/logo.png" alt="Logo" class="logo">
     </div>
+    
+    <!-- Mensaje de bienvenida añadido -->
+    <div class="welcome-message">
+      <p>Más de 4 millones de mexicanos ya eligen ganar con Stori.</p>
+    </div>
+    
     <div class="chat-content">
       <div id="chatMessages" class="chat-messages">
         <div class="typing-indicator" id="typing-indicator">
@@ -46,7 +25,13 @@
       </div>
       <div class="chat-input">
         <input type="text" id="messageInput" placeholder="Ingresa tu respuesta..." autocomplete="off">
-        <button id="sendBtn">Enviar</button>
+        <button id="sendBtn">
+          <!-- Icono de enviar (flecha) -->
+          <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -62,7 +47,7 @@
       text = text.replace(/\n\n/g, '</p><p>');
       text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-      text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="chat-link" target="_blank">$1</a>');
+      text = text.replace(/\[([^\]]+)\]$$([^)]+)$$/g, '<a href="$2" class="chat-link" target="_blank">$1</a>');
       text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" class="chat-link" target="_blank">$1</a>');
       text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
       text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
@@ -73,6 +58,16 @@
     function addMessage(text, sender) {
       const msgDiv = document.createElement("div");
       msgDiv.classList.add("message", sender);
+      
+      // Si es mensaje del bot, añadir avatar
+      if (sender === "bot") {
+        const avatar = document.createElement("img");
+        avatar.src = "./assets/img/favicon.png"; // Usar la misma imagen del logo como avatar
+        avatar.alt = "Bot Avatar";
+        avatar.className = "bot-avatar";
+        msgDiv.appendChild(avatar);
+      }
+      
       const bubble = document.createElement("div");
       bubble.classList.add("bubble");
       bubble.innerHTML = sender === "bot" ? parseMarkdown(text) : text;
@@ -86,25 +81,26 @@
       sendBtn.disabled = true;
       const msgDiv = document.createElement("div");
       msgDiv.classList.add("message", "bot");
-      const bubble = document.createElement("div"); bubble.classList.add("bubble");
+      
+      // Añadir avatar para el bot
+      const avatar = document.createElement("img");
+      avatar.src = "./assets/img/favicon.png"; // Usar la misma imagen del logo como avatar
+      avatar.alt = "Bot Avatar";
+      avatar.className = "bot-avatar";
+      msgDiv.appendChild(avatar);
+      
+      const bubble = document.createElement("div"); 
+      bubble.classList.add("bubble");
       bubble.innerHTML = parseMarkdown(inter.interactive.body.text);
-      msgDiv.appendChild(bubble);
-
+      
+      // Crear contenedor de botones dentro de la burbuja
       const btnRow = document.createElement("div");
-      btnRow.style.display = "flex";
-      btnRow.style.gap = "10px";
-      btnRow.style.marginTop = "8px";
-
+      btnRow.className = "auth-container";
+      
       inter.interactive.action.buttons.forEach(b => {
         const btn = document.createElement("button");
         btn.textContent = b.reply.title;
-        btn.style.flex = "1";
-        btn.style.padding = "8px";
-        btn.style.borderRadius = "20px";
-        btn.style.border = "none";
-        btn.style.background = "#6f9b7b";
-        btn.style.color = "#fff";
-        btn.style.cursor = "pointer";
+        btn.className = "auth-button";
         btn.onclick = () => {
           btnRow.querySelectorAll('button').forEach(x => x.disabled = true);
           addMessage(b.reply.title, "user");
@@ -112,8 +108,11 @@
         };
         btnRow.appendChild(btn);
       });
-
-      msgDiv.appendChild(btnRow);
+      
+      // Añadir los botones dentro de la burbuja
+      bubble.appendChild(btnRow);
+      msgDiv.appendChild(bubble);
+      
       chatMessages.insertBefore(msgDiv, typingIndicator);
       setTimeout(() => chatMessages.scrollTop = chatMessages.scrollHeight, 10);
     }
