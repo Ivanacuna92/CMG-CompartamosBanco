@@ -486,8 +486,8 @@
             const btn = document.createElement('button');
             btn.textContent = p;
             btn.className = `pagination-btn px-4 py-2 rounded-full font-medium transition-colors duration-200 ${p === currentPage
-                ? 'bg-esac-green text-white'
-                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              ? 'bg-esac-green text-white'
+              : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`;
             btn.disabled = p === currentPage;
             btn.onclick = () => { currentPage = p; loadReport(); };
@@ -593,8 +593,8 @@
           msgs.forEach((m, index) => {
             const div = document.createElement('div');
             div.className = `chat-bubble p-4 rounded-lg mb-3 ${m.role === 'Cliente'
-                ? 'bg-esac-green/10 text-gray-800 ml-auto max-w-[80%]'
-                : 'bg-white text-gray-800 border border-gray-200 max-w-[80%]'
+              ? 'bg-esac-green/10 text-gray-800 ml-auto max-w-[80%]'
+              : 'bg-white text-gray-800 border border-gray-200 max-w-[80%]'
               }`;
             div.style.animationDelay = `${index * 100}ms`;
 
@@ -604,8 +604,33 @@
             roleSpan.textContent = m.role;
 
             const messageP = document.createElement('p');
-            // Aplicar resaltado de texto marcado
-            messageP.innerHTML = highlightMarkedText(m.message);
+
+            let formattedMessage = m.message;
+
+            // Intentar parsear el mensaje como JSON (para detectar si es tipo botón interactivo)
+            try {
+              const parsed = JSON.parse(m.message);
+              if (parsed.type === 'interactive' && parsed.interactive?.type === 'button') {
+                formattedMessage = '¿Cómo deseas verificar tu identidad? Teléfono o Correo.';
+              }
+            } catch (error) {
+              // No hacer nada si falla el parseo (no es JSON)
+            }
+
+            // Manejar respuestas de selección específicas
+            if (formattedMessage === 'METODO_TELEFONO') {
+              formattedMessage = 'Seleccionaste validar por Teléfono.';
+            } else if (formattedMessage === 'METODO_CORREO') {
+              formattedMessage = 'Seleccionaste validar por Correo.';
+            }
+
+            // Aplicar resaltado solo si es texto normal
+            messageP.innerHTML = highlightMarkedText(formattedMessage);
+
+
+            // Aplicar resaltado solo si es texto normal
+            messageP.innerHTML = highlightMarkedText(formattedMessage);
+
 
             div.appendChild(roleSpan);
             div.appendChild(messageP);
