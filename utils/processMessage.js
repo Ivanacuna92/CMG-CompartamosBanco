@@ -1,9 +1,5 @@
 // utils/processMessage.js
-import {
-  callAIConversation,
-  generateUserSummary,
-  solicitarDatoAdicional
-} from "./openaiClient.js";
+import { callAIConversation, generateUserSummary } from "./openaiClient.js";
 import { dbUsers } from "./dbUsers.js";
 
 /**
@@ -12,7 +8,7 @@ import { dbUsers } from "./dbUsers.js";
 function normalizeText(str) {
   return str
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, " ")
     .trim()
     .toUpperCase();
@@ -21,129 +17,111 @@ function normalizeText(str) {
 const telefonoRegex = /^\d{10}$/;
 const correoRegex   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Flujo de validación de usuario:
+ * 1) inicio: seleccionar método (Teléfono/Correo)
+ * 2) esperando_metodo: espera selección, IA si texto libre
+ * 3) esperando_contacto: validar formato, IA si erróneo
+ * 4) esperando_nombre: validar contra la DB
+ * 5) conversacion_general: IA normal
+ */
 export async function processMessage(session, userMessage) {
-  // Guardar siempre el mensaje del usuario
   session.messages.push({ role: "user", content: userMessage });
 
-  // Normalizar posibles inputs de nombre
-  const cleaned = userMessage.replace(/^(?:es\s+|soy\s+|me llamo\s+)/i, "");
-  const nombreInput = normalizeText(cleaned);
-  const words = nombreInput.split(" ").filter(Boolean);
+  const txtLower = userMessage.trim().toLowerCase();
+  const nombreNorm = normalizeText(userMessage);
 
-  // Match exacto de nombre completo
-  const matches = dbUsers.filter(r => {
-    const nombreNorm = normalizeText(r.nombre);
-    return words.length >= 2 && nombreNorm === nombreInput;
-  });
-
-  // 1) Inicio: saludo o salto si ya dio nombre completo
+  // 1) inicio: mostrar botones
   if (!session.phase || session.phase === "inicio") {
-    if (matches.length) {
-      // Salto directo a validación
-      session.registro = matches[0];
-      session.phase = "elegir_validacion";
-      const interactive = {
-        type: "interactive",
-        interactive: {
-          type: "button",
-          body: {
-            text: `Gracias ${session.registro.nombre}. ¿Cómo prefieres validar tu información?`
-          },
-          action: {
-            buttons: [
-              { type: "reply", reply: { id: "TELEFONO", title: "Teléfono" } },
-              { type: "reply", reply: { id: "CORREO",   title: "Correo electrónico" } }
-            ]
-          }
+    const interactive = {
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: "¿Cómo prefieres validar tu información?" },
+        action: {
+          buttons: [
+            { type: "reply", reply: { id: "METODO_TELEFONO", title: "Teléfono" } },
+            { type: "reply", reply: { id: "METODO_CORREO",   title: "Correo" } }
+          ]
         }
-      };
-      session.messages.push({ role: "assistant", content: interactive });
-      return interactive;
-    }
-    // Pido nombre con IA
-    const prompt = `El usuario escribió: "${userMessage}". Necesitamos tu nombre completo para continuar (Ej: JUAN PÉREZ LÓPEZ). Por favor, indícalo.`;
-    const iaResp = await callAIConversation(prompt, session.messages);
-    session.phase = "esperando_nombre";
-    session.messages.push({ role: "assistant", content: iaResp });
-    return iaResp;
+      }
+    };
+    session.phase = "esperando_metodo";
+    session.messages.push({ role: "assistant", content: interactive });
+    return interactive;
   }
 
-  // 2) Fase ESPERANDO_NOMBRE: validar nombre
-  if (session.phase === "esperando_nombre") {
-    if (matches.length) {
-      session.registro = matches[0];
-      session.phase = "elegir_validacion";
-      const interactive = {
-        type: "interactive",
-        interactive: {
-          type: "button",
-          body: { text: `Gracias ${session.registro.nombre}. ¿Cómo prefieres validar tu información?` },
-          action: { buttons: [
-              { type: "reply", reply: { id: "TELEFONO", title: "Teléfono" } },
-              { type: "reply", reply: { id: "CORREO",   title: "Correo electrónico" } }
-            ] }
-        }
-      };
-      session.messages.push({ role: "assistant", content: interactive });
-      return interactive;
-    }
-    // Nombre inválido → IA repite petición
-    const prompt = `El usuario escribió: "${userMessage}". Necesitamos tu nombre completo como está en tu registro (Ej: JUAN PÉREZ LÓPEZ). Por favor, indícalo.`;
-    const iaResp = await callAIConversation(prompt, session.messages);
-    session.messages.push({ role: "assistant", content: iaResp });
-    return iaResp;
-  }
-
-  // 3) Fase ELEGIR_VALIDACION: botones
-  if (session.phase === "elegir_validacion") {
-    const txt = userMessage.trim().toLowerCase();
-    if (txt === "teléfono" || userMessage === "TELEFONO") {
-      session.phase = "esperando_telefono";
-      const reply = "Por favor, ingresa tu número de teléfono de 10 dígitos.";
+  // 2) esperando_metodo: IA si texto libre
+  if (session.phase === "esperando_metodo") {
+    if (userMessage === "METODO_TELEFONO" || txtLower === "telefono" || txtLower === "teléfono") {
+      session.method = "telefono";
+      session.phase = "esperando_contacto";
+      const reply = "Por favor, ingresa tu número de teléfono (10 dígitos).";
       session.messages.push({ role: "assistant", content: reply });
       return reply;
     }
-    if (txt === "correo electrónico" || userMessage === "CORREO") {
-      session.phase = "esperando_correo";
+    if (userMessage === "METODO_CORREO" || txtLower === "correo") {
+      session.method = "correo";
+      session.phase = "esperando_contacto";
       const reply = "Por favor, ingresa tu correo electrónico.";
       session.messages.push({ role: "assistant", content: reply });
       return reply;
     }
-    const prompt = `El usuario ingresó: "${userMessage}". Debe elegir entre Teléfono o Correo electrónico.`;
+    // Texto libre: pedir con IA que use botones
+    const prompt = `El usuario escribió: "${userMessage}". Por favor, selecciona un método de validación pulsando uno de los botones: Teléfono o Correo.`;
     const iaResp = await callAIConversation(prompt, session.messages);
     session.messages.push({ role: "assistant", content: iaResp });
     return iaResp;
   }
 
-  // 4) Fase ESPERANDO_TELEFONO: validar y summary IA
-  if (session.phase === "esperando_telefono") {
-    const num = userMessage.trim();
-    if (!telefonoRegex.test(num) || num !== session.registro.telefono) {
-      const iaResp = await solicitarDatoAdicional(session.registro, userMessage);
+  // 3) esperando_contacto: validar formato
+  if (session.phase === "esperando_contacto") {
+    if (session.method === "telefono") {
+      if (!telefonoRegex.test(userMessage.trim())) {
+        const prompt = `El usuario ingresó: "${userMessage}". Recuerda que tu número de teléfono debe tener 10 dígitos.`;
+        const iaResp = await callAIConversation(prompt, session.messages);
+        session.messages.push({ role: "assistant", content: iaResp });
+        return iaResp;
+      }
+      session.contact = userMessage.trim();
+    } else {
+      if (!correoRegex.test(userMessage.trim())) {
+        const prompt = `El usuario ingresó: "${userMessage}". Recuerda que necesitamos un correo electrónico válido.`;
+        const iaResp = await callAIConversation(prompt, session.messages);
+        session.messages.push({ role: "assistant", content: iaResp });
+        return iaResp;
+      }
+      session.contact = userMessage.trim().toLowerCase();
+    }
+    session.phase = "esperando_nombre";
+    const askName = "Gracias. Ahora, por favor ingresa tu nombre completo.";
+    session.messages.push({ role: "assistant", content: askName });
+    return askName;
+  }
+
+  // 4) esperando_nombre: validar en DB
+  if (session.phase === "esperando_nombre") {
+    const registro = dbUsers.find(r => {
+      const nombreDB = normalizeText(r.nombre);
+      const contactMatch = session.method === "telefono"
+        ? r.telefono === session.contact
+        : r.correo.toLowerCase() === session.contact;
+      return contactMatch && nombreDB === nombreNorm;
+    });
+    if (!registro) {
+      const prompt = `El usuario escribió: "${userMessage}". No encontré un registro con esa información. Por favor, ingresa tu nombre completo como aparece en tu cuenta.`;
+      const iaResp = await callAIConversation(prompt, session.messages);
       session.messages.push({ role: "assistant", content: iaResp });
       return iaResp;
     }
+    session.registro = registro;
     session.phase = "conversacion_general";
-    const summary = await generateUserSummary(session.registro);
+    const summary = await generateUserSummary(registro);
     session.messages.push({ role: "assistant", content: summary });
     return summary;
   }
 
-  // 5) Fase ESPERANDO_CORREO: validar y summary IA
-  if (session.phase === "esperando_correo") {
-    const mail = userMessage.trim().toLowerCase();
-    if (!correoRegex.test(mail) || mail !== session.registro.correo.toLowerCase()) {
-      const iaResp = await solicitarDatoAdicional(session.registro, userMessage);
-      session.messages.push({ role: "assistant", content: iaResp });
-      return iaResp;
-    }
-    session.phase = "conversacion_general";
-    const summary = await generateUserSummary(session.registro);
-    session.messages.push({ role: "assistant", content: summary });
-    return summary;
-  }
-
-  // 6) Fase conversacion_general: IA responde normalmente
+  // 5) conversacion_general: IA normal
   const normalReply = await callAIConversation(userMessage, session.messages);
   session.messages.push({ role: "assistant", content: normalReply });
   return normalReply;

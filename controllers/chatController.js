@@ -86,8 +86,7 @@ export async function newChatSession(req, res) {
     // Saludo inicial fijo
     const welcome =
       "Hola, soy Tori, tu asistente virtual.\n" +
-      "Por favor, ingresa tu nombre completo (Ejemplo: JUAN PÉREZ MONTARE)";
-    console.log(">>>> newChatSession:", { newUserId, welcome });
+      "Estoy aquí para ayudarte en lo que necesites";
 
     res.json({ userId: newUserId, response: welcome });
   } catch (err) {
