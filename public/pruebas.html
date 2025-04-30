@@ -6,12 +6,241 @@
   <title>Stori - Bot Pruebas</title>
   <link rel="stylesheet"  href="./assets/css/index.css" />
   <link rel="icon" type="image/png" href="./assets/img/favicon.png" />
+  <style>
+    /* Indicador de ambiente de pruebas - Ahora entre el header y el mensaje de bienvenida */
+    .test-indicator {
+      background-color: #FF9500; /* Color naranja */
+      color: white;
+      padding: 8px 15px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      z-index: 10;
+    }
+    
+    .test-indicator::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: white;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+      }
+      
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0);
+      }
+      
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+      }
+    }
+    
+    /* Botón de reinicio */
+    .reset-button {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background-color 0.2s;
+      margin-left: auto;
+    }
+    
+    .reset-button:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .reset-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8'%3E%3C/path%3E%3Cpath d='M3 3v5h5'%3E%3C/path%3E%3Cpath d='M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16'%3E%3C/path%3E%3Cpath d='M16 21h5v-5'%3E%3C/path%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    
+    /* Estilos para el modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+      animation: modalFadeIn 0.3s;
+    }
+    
+    @keyframes modalFadeIn {
+      from {opacity: 0; transform: translateY(-20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .modal-header h2 {
+      color: #ff3b30;
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .modal-header .warning-icon {
+      color: #ff3b30;
+      font-size: 24px;
+      margin-right: 10px;
+    }
+    
+    .modal-body {
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .modal-footer {
+      text-align: right;
+    }
+    
+    .modal-button {
+      background-color: #00D180;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    .close-modal {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #aaa;
+    }
+    
+    .close-modal:hover {
+      color: #555;
+    }
+    
+    /* Preloader */
+    .preloader-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .preloader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #00D180;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    
+    .preloader-text {
+      color: #333;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Ajustes para el header */
+    .chat-header {
+      justify-content: space-between;
+    }
+  </style>
 </head>
 <body>
+  <!-- Modal de ambiente de pruebas -->
+  <div id="testModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <div class="modal-header">
+        <span class="warning-icon">⚠️</span>
+        <h2>Ambiente de Pruebas</h2>
+      </div>
+      <div class="modal-body">
+        <p>Estás utilizando una versión de <strong>prueba</strong> del asistente virtual de Stori.</p>
+        <p>Este entorno está diseñado exclusivamente para fines de prueba y desarrollo.</p>
+        <p><strong>Importante:</strong> Este ambiente no almacena ninguna información. Todos los datos ingresados se perderán al finalizar la sesión.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-button" onclick="closeModal()">Entendido</button>
+      </div>
+    </div>
+  </div>
+  
   <div class="chat-container">
+    <!-- Preloader -->
+    <div class="preloader-container" id="preloader">
+      <div class="preloader"></div>
+      <div class="preloader-text">Reiniciando conversación...</div>
+    </div>
+    
     <div class="chat-header">
       <img src="./assets/img/logo.png" alt="Logo" class="logo">
+      <button id="resetBtn" class="reset-button">
+        <span class="reset-icon"></span>
+        Reiniciar
+      </button>
     </div>
+    
+    <!-- Indicador de ambiente de pruebas (ahora entre el header y el mensaje de bienvenida) -->
+    <div class="test-indicator">Ambiente de pruebas</div>
     
     <!-- Mensaje de bienvenida añadido -->
     <div class="welcome-message">
@@ -42,7 +271,91 @@
     const chatMessages    = document.getElementById("chatMessages");
     const messageInput    = document.getElementById("messageInput");
     const sendBtn         = document.getElementById("sendBtn");
+    const resetBtn        = document.getElementById("resetBtn");
     const typingIndicator = document.getElementById("typing-indicator");
+    const modal           = document.getElementById("testModal");
+    const preloader       = document.getElementById("preloader");
+
+    // Mostrar el modal al cargar la página
+    window.onload = function() {
+      setTimeout(function() {
+        modal.style.display = "flex";
+      }, 500);
+    };
+
+    // Función para cerrar el modal
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    // Cerrar el modal si se hace clic fuera de él
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        closeModal();
+      }
+    };
+    
+    // Función para reiniciar la conversación
+    resetBtn.addEventListener("click", function() {
+      // Mostrar preloader
+      preloader.style.display = "flex";
+      
+      // Deshabilitar entrada de mensajes durante el reinicio
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
+      resetBtn.disabled = true;
+      
+      // Simular tiempo de carga
+      setTimeout(function() {
+        // Limpiar todos los mensajes
+        while (chatMessages.firstChild) {
+          if (chatMessages.firstChild === typingIndicator) {
+            break;
+          }
+          chatMessages.removeChild(chatMessages.firstChild);
+        }
+        
+        // Reiniciar userId
+        userId = null;
+        
+        // Iniciar nueva conversación
+        initConversation();
+        
+      }, 1500); // 1.5 segundos de preloader
+    });
+
+    // Función para iniciar una nueva conversación
+    async function initConversation() {
+      try {
+        const res = await fetch("/pruebas/new", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        userId = data.userId;
+        
+        // Ocultar preloader
+        preloader.style.display = "none";
+        
+        // Habilitar entrada de mensajes
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        resetBtn.disabled = false;
+        
+        addMessage(data.response, "bot");
+      } catch {
+        // Ocultar preloader
+        preloader.style.display = "none";
+        
+        // Habilitar entrada de mensajes
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        resetBtn.disabled = false;
+        
+        addMessage("Lo siento, no pude iniciar la conversación.", "bot");
+      }
+    }
 
     function parseMarkdown(text) {
       text = text.replace(/\n\n/g, '</p><p>');
