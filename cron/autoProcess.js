@@ -14,7 +14,7 @@ Analiza cuidadosamente la siguiente conversación:
 ${convoText}
 
 Aplica estas reglas:
-- Si el usuario envía el mismo contrato dos o más veces y ACEPTA pagar (sin negaciones), responde "1".
+- Si el usuario ACEPTA pagar o menciona cosas relacioandas a esto como "mañana lo hago", "ya lo are", "pasado mañana", etc (sin negaciones), responde "1".
 - En cualquier otro caso responde "0".
 Solo devuelve "1" o "0".
 `;
