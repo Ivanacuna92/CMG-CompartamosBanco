@@ -20,10 +20,10 @@ Solo devuelve "1" o "0".
 `;
 
 export function startAutoProcessing() {
-    cron.schedule("0 3 * * *", async () => {
-        console.log("🔄 Procesando conversaciones a las 03:00am…");
+  cron.schedule("0 3 * * *", async () => {
+    console.log("🔄 Procesando conversaciones a las 03:00am…");
 
-    // 1) Conversaciones aún sin evaluar (payment_agreement IS NULL)
+    // 1) Conversaciones aún sin evaluar
     const [rows] = await pool.query(`
       SELECT id, conversation, contract_number
         FROM esac_conversations
@@ -32,24 +32,25 @@ export function startAutoProcessing() {
 
     for (const convo of rows) {
       try {
-        // 2) Pregunta a DeepSeek
+        // 2) Llamar a DeepSeek
         const resp = await openai.chat.completions.create({
           model: "deepseek-chat",
           messages: [
             { role: "system", content: ANALYSIS_PROMPT(convo.conversation) }
           ]
         });
+
         const answer = resp.choices[0].message.content.trim();
         const agreement = answer === "1" ? 1 : 0;
 
-        // 3) Calcular estimated_recovery
+        // 3) Calcular estimated_recovery solo si hay acuerdo
         let estimated = 0.00;
         if (agreement === 1) {
           const user = dbUsers.find(u => u.contrato === convo.contract_number);
           estimated = user ? user.monto_a_pagar : 0.00;
         }
 
-        // 4) Actualizar esta fila
+        // 4) Actualizar esta conversación
         await pool.query(
           `UPDATE esac_conversations
               SET payment_agreement  = ?,
@@ -58,20 +59,17 @@ export function startAutoProcessing() {
           [agreement, estimated, convo.id]
         );
 
-// cron/autoProcess.js (paso 5 modificado)
-if (convo.contract_number) {
-    // Marcamos como "renegociadas" (2) TODAS las filas anteriores
-    await pool.query(
-      `UPDATE esac_conversations
-         SET payment_agreement  = 2,
-             estimated_recovery = 0.00
-       WHERE contract_number = ?
-         AND id <> ?
-         AND payment_agreement <> 2`,    // solo las que aún no sean 2
-      [convo.contract_number, convo.id]
-    );
-  }
-  
+        // 5) Marcar anteriores como renegociadas, SIN tocar estimated_recovery
+        if (convo.contract_number) {
+          await pool.query(
+            `UPDATE esac_conversations
+                SET payment_agreement = 2
+              WHERE contract_number = ?
+                AND id <> ?
+                AND payment_agreement <> 2`,
+            [convo.contract_number, convo.id]
+          );
+        }
 
         console.log(`✅ Convo ${convo.id} → agreement=${agreement}`);
       } catch (err) {
