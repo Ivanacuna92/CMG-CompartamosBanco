@@ -1,12 +1,7 @@
-// utils/dbUsers.js
 import { clientePool } from "../db/configs.js";
 
 /**
  * Busca un cliente en la tabla `datos` por teléfono o correo y nombre ya normalizado
- * @param {"telefono" | "correo"} method
- * @param {string} contact - número o correo ya validado
- * @param {string} nombreNormalizado - nombre ya normalizado desde el código principal
- * @returns {object|null}
  */
 export async function getUserByValidation(method, contact, nombreNormalizado) {
   try {
@@ -26,6 +21,22 @@ export async function getUserByValidation(method, contact, nombreNormalizado) {
 
   } catch (err) {
     console.error("❌ Error en getUserByValidation:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Busca un cliente en la tabla `datos` por número de cuenta
+ */
+export async function getUserByCredito(credito) {
+  try {
+    const [rows] = await clientePool.query(
+      `SELECT * FROM datos WHERE cuenta = ?`,
+      [credito]
+    );
+    return rows[0] || null;
+  } catch (error) {
+    console.error("❌ Error al obtener cliente por cuenta:", error);
     return null;
   }
 }
