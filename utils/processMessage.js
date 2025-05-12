@@ -1,6 +1,6 @@
 // utils/processMessage.js
 import { callAIConversation, generateUserSummary } from "./openaiClient.js";
-import { dbUsers } from "./dbUsers.js";
+import { getUserByValidation } from "./dbUsers.js"; // <-- se usa BD real
 
 /**
  * Normaliza texto: elimina acentos, múltiples espacios y convierte a mayúsculas
@@ -17,14 +17,6 @@ function normalizeText(str) {
 const telefonoRegex = /^\d{10}$/;
 const correoRegex   = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Flujo de validación de usuario:
- * 1) inicio: seleccionar método (Teléfono/Correo)
- * 2) esperando_metodo: espera selección, IA si texto libre
- * 3) esperando_contacto: validar formato, IA si erróneo
- * 4) esperando_nombre: validar contra la DB
- * 5) conversacion_general: IA normal
- */
 export async function processMessage(session, userMessage) {
   session.messages.push({ role: "user", content: userMessage });
 
@@ -67,7 +59,7 @@ export async function processMessage(session, userMessage) {
       session.messages.push({ role: "assistant", content: reply });
       return reply;
     }
-    // Texto libre: pedir con IA que use botones
+
     const prompt = `El usuario escribió: "${userMessage}". Por favor, selecciona un método de validación pulsando uno de los botones: Teléfono o Correo.`;
     const iaResp = await callAIConversation(prompt, session.messages);
     session.messages.push({ role: "assistant", content: iaResp });
@@ -99,23 +91,19 @@ export async function processMessage(session, userMessage) {
     return askName;
   }
 
-  // 4) esperando_nombre: validar en DB
+  // 4) esperando_nombre: validar en base de datos real
   if (session.phase === "esperando_nombre") {
-    const registro = dbUsers.find(r => {
-      const nombreDB = normalizeText(r.nombre);
-      const contactMatch = session.method === "telefono"
-        ? r.telefono === session.contact
-        : r.correo.toLowerCase() === session.contact;
-      return contactMatch && nombreDB === nombreNorm;
-    });
+    const registro = await getUserByValidation(session.method, session.contact, nombreNorm);
     if (!registro) {
       const prompt = `El usuario escribió: "${userMessage}". No encontré un registro con esa información. Por favor, ingresa tu nombre completo como aparece en tu cuenta.`;
       const iaResp = await callAIConversation(prompt, session.messages);
       session.messages.push({ role: "assistant", content: iaResp });
       return iaResp;
     }
+
     session.registro = registro;
     session.phase = "conversacion_general";
+
     const summary = await generateUserSummary(registro);
     session.messages.push({ role: "assistant", content: summary });
     return summary;
