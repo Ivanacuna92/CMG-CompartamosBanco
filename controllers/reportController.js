@@ -27,7 +27,7 @@ export async function listConversations(req, res) {
     FROM esac_conversations
     WHERE (? = '' OR MONTH(last_update) = ?)
       AND (? = '' OR DAY(last_update) = ?)
-    ORDER BY last_update DESC
+    ORDER BY id ASC
     LIMIT ? OFFSET ?
   `, [month, month, day, day, Number(size), offset]);
   const [[{ total }]] = await pool.query("SELECT FOUND_ROWS() AS total");
