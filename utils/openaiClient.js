@@ -71,7 +71,7 @@ export async function generateUserSummary(registro) {
     plan_2_exhibiciones,
     plan_4_exhibiciones
   } = registro;
-
+console.log(plan_4_exhibiciones);
   const prompt = `
 Genera un mensaje claro, cálido y profesional para el cliente con estos datos:
 
