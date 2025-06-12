@@ -71,7 +71,7 @@ export async function generateUserSummary(registro) {
     plan_2_exhibiciones,
     plan_4_exhibiciones
   } = registro;
-console.log(plan_4_exhibiciones);
+
   const prompt = `
 Genera un mensaje claro, cálido y profesional para el cliente con estos datos:
 
@@ -90,6 +90,17 @@ Invítalo cordialmente a realizar el pago dentro de las próximas 24 horas para 
 Solo responde con el mensaje final, sin encabezados ni comentarios adicionales.
 `.trim();
 
+console.log("Datos Opteniedos de la Bd" + `
+- nombre: ${nombre}
+- correo: ${correo}
+- telefono: ${telefono}
+- producto: ${producto}
+- dias: ${dias}
+- total: $${parseFloat(total || 0).toFixed(2)} MXN
+- clabe: ${clabe}
+- plan_2_exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)}
+- plan_4_exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)}
+`)
   try {
     const response = await openai.chat.completions.create({
       model: "deepseek-chat",
