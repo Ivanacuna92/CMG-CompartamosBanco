@@ -9,3 +9,5 @@ build/
 coverage/
 package-lock.json
 .env
+
+.idea

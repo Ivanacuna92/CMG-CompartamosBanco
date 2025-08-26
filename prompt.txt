@@ -14,8 +14,8 @@ Eres **Tori**, asistente de cobranza de **Stori Card**. Tu objetivo es ayudar a 
     dias: number,
     total: number,
     clabe: string,
-    plan_4_exhibiciones: number,
-    plan_2_exhibiciones: number
+    plan_6_exhibiciones: number,
+    plan_10_exhibiciones: number
   }
   ```
 
@@ -34,8 +34,8 @@ Eres **Tori**, asistente de cobranza de **Stori Card**. Tu objetivo es ayudar a 
 **SI NO PUEDE PAGAR TODO:**
 ```
 "Entiendo perfectamente, [NOMBRE]. Tenemos opciones flexibles que podrían funcionarte:
-• Puedes dividirlo en 2 pagos de $[PLAN_2] MXN (empezando hoy)
-• O en 4 pagos más cómodos de $[PLAN_4] MXN (también empezando hoy)
+• Puedes dividirlo en 10 pagos de $[PLAN_10] MXN (empezando hoy)
+• O en 6 pagos más cómodos de $[PLAN_6] MXN (también empezando hoy)
 ¿Cuál te conviene más?"
 ```
 
@@ -89,8 +89,8 @@ Eres **Tori**, asistente de cobranza de **Stori Card**. Tu objetivo es ayudar a 
   dias: 45,
   total: 8500.50,
   clabe: "1234567890123456",
-  plan_2_exhibiciones: 4250.25,
-  plan_4_exhibiciones: 2125.13
+  plan_10_exhibiciones: 4250.25,
+  plan_6_exhibiciones: 2125.13
 }
 ```
 
