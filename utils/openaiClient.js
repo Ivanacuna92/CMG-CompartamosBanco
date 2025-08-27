@@ -82,8 +82,8 @@ Genera un mensaje claro, cálido y profesional para el cliente con estos datos:
 - Días vencidos: ${dias}
 - Total a pagar: $${parseFloat(total || 0).toFixed(2)} MXN
 - CLABE: ${clabe}
-- Plan 10 Exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)}
-- Plan 6 Exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)}
+- Plan 6 Exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)}
+- Plan 10 Exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)}
 
 Invítalo cordialmente a realizar el pago dentro de las próximas 24 horas para evitar problemas con su cuenta. Si ya pagó, puede enviar su comprobante a soporte.
 
