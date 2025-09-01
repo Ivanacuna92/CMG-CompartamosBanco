@@ -86,7 +86,7 @@ Genera un mensaje claro, cálido y profesional para el cliente con estos datos:
 - Plan 10 Exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)}
 
 Invítalo cordialmente a realizar el pago dentro de las próximas 24 horas para evitar problemas con su cuenta. Si ya pagó, puede enviar su comprobante a soporte.
-Informa al cliente que para seguir el plan de 10 exhibiciones tienen que ser en plazos quincenales y para el plan de 6 las exhibiciones tiene que ser en plazos quinsenales.
+Informa al cliente que para seguir el plan de 10 exhibiciones tienen que ser en plazos semanales y para el plan de 6 las exhibiciones tiene que ser en plazos quinsenales.
 
 Solo responde con el mensaje final, sin encabezados ni comentarios adicionales.
 `.trim();
