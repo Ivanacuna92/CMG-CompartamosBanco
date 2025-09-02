@@ -16,7 +16,6 @@ Analiza cuidadosamente la siguiente conversación:
 ${convoText}
 
 Aplica estas reglas:
-- Si el usuario acepta pagar o pregunta directamente por opciones o métodos de pago, debes responder de manera explícita y sin ambigüedades que la única forma de pago disponible es vía SPEI.
 - Si el usuario ACEPTA pagar o menciona cosas como "mañana lo hago", "ya lo haré", "pasado mañana", etc. (sin negaciones), responde "1".
 .- En cualquier otro caso responde "0".
 Solo devuelve "1" o "0".
