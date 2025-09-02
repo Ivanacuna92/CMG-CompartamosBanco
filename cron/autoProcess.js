@@ -15,6 +15,7 @@ ${convoText}
 
 Aplica estas reglas:
 - Si el usuario ACEPTA pagar o menciona cosas relacionadas a esto como "mañana lo hago", "ya lo haré", "pasado mañana", etc. (sin negaciones), responde "1".
+- Si el usuario ACEPTA pagar o pregunta cuales son las formas disponibles para pagar le tienes que hacer saber que solo hay una forma de hacerlo y es por via SPEI.
 - En cualquier otro caso responde "0".
 Solo devuelve "1" o "0".
 `.trim();
