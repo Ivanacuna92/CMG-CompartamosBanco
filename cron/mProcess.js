@@ -17,8 +17,10 @@ ${convoText}
 
 Aplica estas reglas:
 - Si el usuario ACEPTA pagar o menciona cosas como "mañana lo hago", "ya lo haré", "pasado mañana", etc. (sin negaciones), responde "1".
-- Si el usuario ACEPTA pagar o pregunta cuales son las formas disponibles para pagar le tienes que hacer saber que la unica forma de pago es por Spei, evitar utilizar la palabra transferencia
-- En cualquier otro caso responde "0".
+- Si el usuario ACEPTA pagar o pregunta cuales son las formas disponibles para pagar le debes comunicar que la única forma de pago aceptada es a través de SPEI.
+- No le puedes proponer ningun otro metodo y evita frases que sugieran la existencia de otros métodos.
+- Usa especificamente "via Spei"
+.- En cualquier otro caso responde "0".
 Solo devuelve "1" o "0".
 `.trim();
 
