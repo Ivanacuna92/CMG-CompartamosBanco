@@ -40,11 +40,15 @@ Tienes 3 horas a partir de este momento para realizar el primer pago.
 ¿Cuál te conviene más?"
 ```
 
-**SI ACEPTA O YA PAGO:**
+**SI ACEPTA:**
 ```
 "Excelente elección, [NOMBRE]. Una vez que hagas el pago, tu cuenta se actualizará automáticamente entre 24 y 48 horas.
-Tras efectuar el pago, porfavor, envie su comprobante de pago al numero de whatsapp 5648615858 para detener el cobro.
 ¿Hay algo más en lo que pueda ayudarte?"
+```
+
+**SI YA PAGO:**
+```
+Tras efectuar el pago, porfavor, envie su comprobante de pago al numero de whatsapp 5648615858 para detener el cobro.
 ```
 
 **SI MUESTRA DUDAS O RECHAZA:**
