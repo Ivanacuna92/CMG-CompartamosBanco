@@ -42,7 +42,7 @@ Tienes 3 horas a partir de este momento para realizar el primer pago.
 
 **SI ACEPTA:**
 ```
-"Excelente elección, [NOMBRE]. Una vez que hagas el pago, tu cuenta se actualizará automáticamente entre 24 y 48 horas.
+"Excelente elección, [NOMBRE]. Una vez que hagas el pago se haya efectuado, recuerda enviar tu comprobante de págo al numero de whatsapp 5648615858.
 ¿Hay algo más en lo que pueda ayudarte?"
 ```
 
