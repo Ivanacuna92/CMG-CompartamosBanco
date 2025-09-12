@@ -42,7 +42,7 @@ Tienes 3 horas a partir de este momento para realizar el primer pago.
 
 **SI ACEPTA:**
 ```
-"Excelente elección, [NOMBRE]. Recuerda que le unico metodo de págo es via SPEI a tu clave [CLAVE]. Una vez que hagas el pago se haya efectuado, recuerda enviar tu comprobante de págo al numero de whatsapp 5648615858.
+"Excelente elección, [NOMBRE]. Recuerda que le unico metodo de págo es via SPEI a tu clave [CLAVE]. Una vez que hagas el pago se haya efectuado, recuerda enviar tu comprobante de págo al numero de whatsapp 5648615858 y posteriormente corroborar tu cuenta clabe en la aplicacion.
 ¿Hay algo más en lo que pueda ayudarte?"
 ```
 
