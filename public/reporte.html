@@ -73,7 +73,7 @@
         </svg>
         Filtros de Reporte
       </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-600 mb-1">Filtrar por año:</label>
           <select id="yearFilter"
@@ -94,6 +94,11 @@
             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-esac-green focus:border-esac-green transition-all duration-200">
             <option value="">Todos los días</option>
           </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Filtrar por cuenta:</label>
+          <input id="contractFilter" type="text" placeholder="Número de cuenta"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-esac-green focus:border-esac-green transition-all duration-200">
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-600 mb-1">Registros por página:</label>
@@ -292,6 +297,7 @@
     const yearFilter = document.getElementById('yearFilter');
     const monthFilter = document.getElementById('monthFilter');
     const dayFilter = document.getElementById('dayFilter');
+    const contractFilter = document.getElementById('contractFilter');
     const pageSize = document.getElementById('pageSize');
     const applyFilters = document.getElementById('applyFilters');
     const exportCsv = document.getElementById('exportCsv');
@@ -382,6 +388,7 @@
         year: selectedYear,
         month: monthFilter.value,
         day: dayFilter.value,
+        contract: contractFilter.value,
         page: currentPage,
         size: pageSize.value
       });
@@ -542,9 +549,10 @@
       const year = yearFilter.value;
       const month = monthFilter.value;
       const day = dayFilter.value;
+      const contract = contractFilter.value;
 
       // Redireccionar a la API de exportación
-      window.location = `/api/export?year=${year}&month=${month}&day=${day}`;
+      window.location = `/api/export?year=${year}&month=${month}&day=${day}&contract=${contract}`;
     };
 
     // Eventos de filtro
@@ -560,6 +568,14 @@
         loadReport();
       })
     );
+
+    // Aplicar filtro al presionar Enter en el campo de cuenta
+    contractFilter.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        currentPage = 1;
+        loadReport();
+      }
+    });
 
     // Delegar evento "Ver" para mostrar modal
     convTable.addEventListener('click', async e => {
