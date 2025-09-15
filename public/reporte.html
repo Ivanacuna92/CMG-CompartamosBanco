@@ -224,13 +224,12 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interacciones
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contrato</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuenta</th>
             </tr>
           </thead>
           <tbody id="convTable" class="bg-white divide-y divide-gray-200">
             <!-- Filas generadas por JS -->
             <tr class="animate-pulse">
-              <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                 <div class="flex justify-center">
                   <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-esac-green"></div>
                   <span class="ml-2">Cargando datos...</span>
@@ -413,7 +412,7 @@
         if (rows.length === 0) {
           convTable.innerHTML = `
             <tr>
-              <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
                 No se encontraron resultados para los filtros seleccionados
               </td>
             </tr>
@@ -454,7 +453,6 @@
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-gray-700">${c.contract_number || '-'}</td>
-              <td class="px-6 py-4 whitespace-nowrap font-medium ${c.cuenta !== '-' ? 'text-esac-green' : 'text-gray-500'}">${c.cuenta || '-'}</td>
             `;
             convTable.appendChild(tr);
           });
