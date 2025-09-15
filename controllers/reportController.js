@@ -23,7 +23,11 @@ export async function listConversations(req, res) {
   const offset = (page - 1) * size;
   const [data] = await pool.query(`
     SELECT SQL_CALC_FOUND_ROWS
-      id, uuid, last_update, payment_agreement, estimated_recovery, total_interactions, contract_number
+      id, uuid, last_update, payment_agreement, estimated_recovery, total_interactions, contract_number,
+      CASE
+        WHEN payment_agreement = 1 THEN contract_number
+        ELSE '-'
+      END AS cuenta
     FROM esac_conversations
     WHERE (? = '' OR MONTH(last_update) = ?)
       AND (? = '' OR DAY(last_update) = ?)
