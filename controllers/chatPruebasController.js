@@ -108,7 +108,7 @@ export async function newChatSessionSQLite(req, res) {
 
     const welcome =
       "Hola, soy Tori, tu asistente virtual.\n" +
-      "Estoy aquí para ayudarte en lo que necesites";
+      "Estoy aquí para ayudarte para la liquidación de tu adeudo.";
 
     res.json({ userId: newUserId, response: welcome });
   } catch (err) {
