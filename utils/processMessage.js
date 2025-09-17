@@ -29,7 +29,7 @@ export async function processMessage(session, userMessage) {
       type: "interactive",
       interactive: {
         type: "button",
-        body: { text: "¿Cómo prefieres validar tu información?" },
+        body: { text: "¿Para brindarte los beneficios ¿Cómo deseas identificarte? Teléfono o Correo?", },
         action: {
           buttons: [
             { type: "reply", reply: { id: "METODO_TELEFONO", title: "Teléfono" } },
