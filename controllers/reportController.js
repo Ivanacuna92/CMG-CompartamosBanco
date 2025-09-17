@@ -1,5 +1,6 @@
 // controllers/reportController.js
 import { pool } from "../utils/dbClient.js";
+import { clientePool } from "../db/configs.js";
 import { Parser } from "json2csv";
 
 export async function getSummary(req, res) {
@@ -32,6 +33,25 @@ export async function listConversations(req, res) {
     ORDER BY id DESC
     LIMIT ? OFFSET ?
   `, [month, month, day, day, contract, contract, Number(size), offset]);
+
+  // Obtener nombres de clientes para cada conversación
+  for (let row of data) {
+    if (row.contract_number) {
+      try {
+        const [clientRows] = await clientePool.query(
+          `SELECT nombre FROM datos WHERE cuenta = ?`,
+          [row.contract_number]
+        );
+        row.client_name = clientRows[0]?.nombre || '-';
+      } catch (error) {
+        console.error("Error obteniendo nombre del cliente:", error);
+        row.client_name = '-';
+      }
+    } else {
+      row.client_name = '-';
+    }
+  }
+
   const [[{ total }]] = await pool.query("SELECT FOUND_ROWS() AS total");
   const totalPages = Math.ceil(total / size);
   res.json({ rows: data, totalPages });
@@ -57,6 +77,25 @@ export async function exportCsv(req, res) {
        AND (? = '' OR DAY(last_update) = ?)
        AND (? = '' OR contract_number = ?)
   `, [month, month, day, day, contract, contract]);
+
+  // Agregar nombres de clientes
+  for (let row of rows) {
+    if (row.contract_number) {
+      try {
+        const [clientRows] = await clientePool.query(
+          `SELECT nombre FROM datos WHERE cuenta = ?`,
+          [row.contract_number]
+        );
+        row.client_name = clientRows[0]?.nombre || '-';
+      } catch (error) {
+        console.error("Error obteniendo nombre del cliente para CSV:", error);
+        row.client_name = '-';
+      }
+    } else {
+      row.client_name = '-';
+    }
+  }
+
   const parser = new Parser();
   const csv = parser.parse(rows);
   res.header("Content-Type", "text/csv");

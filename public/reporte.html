@@ -221,6 +221,7 @@
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre del Cliente</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mensajes</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acuerdo de Pago
               </th>
@@ -234,7 +235,7 @@
           <tbody id="convTable" class="bg-white divide-y divide-gray-200">
             <!-- Filas generadas por JS -->
             <tr class="animate-pulse">
-              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                 <div class="flex justify-center">
                   <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-esac-green"></div>
                   <span class="ml-2">Cargando datos...</span>
@@ -372,7 +373,7 @@
       // Mostrar un estado de carga
       convTable.innerHTML = `
         <tr class="animate-pulse">
-          <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+          <td colspan="8" class="px-6 py-4 text-center text-gray-500">
             <div class="flex justify-center">
               <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-esac-green"></div>
               <span class="ml-2">Cargando datos...</span>
@@ -419,7 +420,7 @@
         if (rows.length === 0) {
           convTable.innerHTML = `
             <tr>
-              <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                 No se encontraron resultados para los filtros seleccionados
               </td>
             </tr>
@@ -434,6 +435,7 @@
             tr.innerHTML = `
               <td class="px-6 py-4 whitespace-nowrap">${c.id}</td>
               <td class="px-6 py-4 whitespace-nowrap">${new Date(c.last_update).toLocaleString()}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">${c.client_name || '-'}</td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <button data-uuid="${c.uuid}" class="view-btn bg-esac-green hover:bg-esac-darkgreen text-white px-3 py-1.5 rounded-full transition-colors duration-200 text-sm flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -536,7 +538,7 @@
 
         convTable.innerHTML = `
           <tr>
-            <td colspan="7" class="px-6 py-4 text-center text-red-500">
+            <td colspan="8" class="px-6 py-4 text-center text-red-500">
               Error al cargar los datos. Posiblemente no existan datos en el filtro seleccionado, en caso de existir y persista el problema contáctanos.
             </td>
           </tr>
