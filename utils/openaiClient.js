@@ -72,6 +72,34 @@ export async function generateUserSummary(registro) {
     plan_4_exhibiciones
   } = registro;
 
+  // Validar si los planes de exhibiciones tienen datos válidos
+  const plan6Valido = plan_2_exhibiciones && parseFloat(plan_2_exhibiciones) > 0;
+  const plan10Valido = plan_4_exhibiciones && parseFloat(plan_4_exhibiciones) > 0;
+
+  console.log("Datos Obtenidos de la BD" + `
+- nombre: ${nombre}
+- correo: ${correo}
+- telefono: ${telefono}
+- producto: ${producto}
+- dias: ${dias}
+- total: $${parseFloat(total || 0).toFixed(2)} MXN
+- clabe: ${clabe}
+- plan_2_exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)} ${plan6Valido ? '✅' : '❌'}
+- plan_4_exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)} ${plan10Valido ? '✅' : '❌'}
+`);
+
+  // Si ambos planes son inválidos, retornar mensaje de error
+  if (!plan6Valido && !plan10Valido) {
+    console.log("⚠️ [generateUserSummary] Planes de exhibiciones inválidos o en 0/null");
+    return `Hola ${nombre}, hemos encontrado tu información pero algo salió mal al obtener los datos de los planes de exhibiciones desde la base de datos.
+
+Por favor, contacta directamente a Stori para obtener ayuda:
+📱 WhatsApp: 5648615858
+📞 Teléfono: 5598161281
+
+Ellos podrán ayudarte con tu cuenta y proporcionarte los detalles de los planes de pago disponibles.`;
+  }
+
   const prompt = `
 Genera un mensaje claro, cálido y profesional para el cliente con estos datos:
 
@@ -91,17 +119,6 @@ Informa al cliente que para seguir el plan de 10 exhibiciones tienen que ser en 
 Solo responde con el mensaje final, sin encabezados ni comentarios adicionales.
 `.trim();
 
-console.log("Datos Opteniedos de la Bd" + `
-- nombre: ${nombre}
-- correo: ${correo}
-- telefono: ${telefono}
-- producto: ${producto}
-- dias: ${dias}
-- total: $${parseFloat(total || 0).toFixed(2)} MXN
-- clabe: ${clabe}
-- plan_2_exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)}
-- plan_4_exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)}
-`)
   try {
     const response = await openai.chat.completions.create({
       model: "deepseek-chat",
