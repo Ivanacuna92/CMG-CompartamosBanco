@@ -4,14 +4,27 @@ import { getUserByValidation } from "./dbUsers.js"; // <-- se usa BD real
 
 /**
  * Normaliza texto: elimina acentos, múltiples espacios y convierte a mayúsculas
+ * IMPORTANTE: También convierte Ñ -> N para comparaciones
  */
-function normalizeText(str) {
-  return str
-    .normalize("NFD")
-    .replace(/[^\w\s]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toUpperCase();
+export function normalizeText(str) {
+  console.log("🔍 [normalizeText] Texto original:", str);
+
+  const step1 = str.normalize("NFD");
+  console.log("📝 [normalizeText] Después de NFD:", step1);
+
+  const step2 = step1.replace(/[\u0300-\u036f]/g, ""); // Elimina solo los acentos diacríticos
+  console.log("📝 [normalizeText] Después de eliminar acentos:", step2);
+
+  const step3 = step2.replace(/[^a-zA-ZÑñ\s]/g, ""); // Preserva letras (incluyendo Ñ) y espacios
+  console.log("📝 [normalizeText] Después de filtrar caracteres:", step3);
+
+  const step4 = step3.replace(/[Ññ]/g, "N"); // Convierte Ñ/ñ a N para comparación
+  console.log("📝 [normalizeText] Después de convertir Ñ->N:", step4);
+
+  const result = step4.replace(/\s+/g, " ").trim().toUpperCase();
+  console.log("✅ [normalizeText] Resultado final:", result);
+
+  return result;
 }
 
 const telefonoRegex = /^\d{10}$/;
