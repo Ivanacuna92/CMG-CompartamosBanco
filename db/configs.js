@@ -11,7 +11,12 @@ export const clientePool = mysql.createPool({
   database: process.env.DB_c_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  connectTimeout: 30000, // 30 segundos
+  acquireTimeout: 30000, // 30 segundos
+  timeout: 30000, // 30 segundos
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000
 });
 
 // Prueba de conexión directa

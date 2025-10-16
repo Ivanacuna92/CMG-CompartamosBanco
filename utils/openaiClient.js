@@ -68,13 +68,13 @@ export async function generateUserSummary(registro) {
     dias,
     total,
     clabe,
-    plan_2_exhibiciones,
-    plan_4_exhibiciones
+    plan_7_exhibiciones_semanales,
+    plan_5_exhibiciones_quincenales
   } = registro;
 
   // Validar si los planes de exhibiciones tienen datos válidos
-  const plan6Valido = plan_2_exhibiciones && parseFloat(plan_2_exhibiciones) > 0;
-  const plan10Valido = plan_4_exhibiciones && parseFloat(plan_4_exhibiciones) > 0;
+  const plan7Valido = plan_7_exhibiciones_semanales && parseFloat(plan_7_exhibiciones_semanales) > 0;
+  const plan5Valido = plan_5_exhibiciones_quincenales && parseFloat(plan_5_exhibiciones_quincenales) > 0;
 
   console.log("Datos Obtenidos de la BD" + `
 - nombre: ${nombre}
@@ -84,12 +84,12 @@ export async function generateUserSummary(registro) {
 - dias: ${dias}
 - total: $${parseFloat(total || 0).toFixed(2)} MXN
 - clabe: ${clabe}
-- plan_2_exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)} ${plan6Valido ? '✅' : '❌'}
-- plan_4_exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)} ${plan10Valido ? '✅' : '❌'}
+- plan_7_exhibiciones_semanales: $${parseFloat(plan_7_exhibiciones_semanales || 0).toFixed(2)} ${plan7Valido ? '✅' : '❌'}
+- plan_5_exhibiciones_quincenales: $${parseFloat(plan_5_exhibiciones_quincenales || 0).toFixed(2)} ${plan5Valido ? '✅' : '❌'}
 `);
 
   // Si ambos planes son inválidos, retornar mensaje de error
-  if (!plan6Valido && !plan10Valido) {
+  if (!plan7Valido && !plan5Valido) {
     console.log("⚠️ [generateUserSummary] Planes de exhibiciones inválidos o en 0/null");
     return `Hola ${nombre}, hemos encontrado tu información pero algo salió mal al obtener los datos de los planes de exhibiciones desde la base de datos.
 
@@ -110,11 +110,11 @@ Genera un mensaje claro, cálido y profesional para el cliente con estos datos:
 - Días vencidos: ${dias}
 - Total a pagar: $${parseFloat(total || 0).toFixed(2)} MXN
 - CLABE: ${clabe}
-- Plan 6 Exhibiciones: $${parseFloat(plan_2_exhibiciones || 0).toFixed(2)}
-- Plan 10 Exhibiciones: $${parseFloat(plan_4_exhibiciones || 0).toFixed(2)}
+- Plan 7 Exhibiciones Semanales: $${parseFloat(plan_7_exhibiciones_semanales || 0).toFixed(2)}
+- Plan 5 Exhibiciones Quincenales: $${parseFloat(plan_5_exhibiciones_quincenales || 0).toFixed(2)}
 
 Invítalo cordialmente a realizar el pago dentro de las próximas 3 horas para evitar problemas con su cuenta. Si ya pagó, puede enviar su comprobante a soporte.
-Informa al cliente que para seguir el plan de 10 exhibiciones tienen que ser en plazos semanales y para el plan de 6 las exhibiciones tiene que ser en plazos quinsenales.
+Informa al cliente que para seguir el plan de 7 exhibiciones tienen que ser en plazos semanales y para el plan de 5 exhibiciones tiene que ser en plazos quincenales.
 
 Solo responde con el mensaje final, sin encabezados ni comentarios adicionales.
 `.trim();

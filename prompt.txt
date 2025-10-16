@@ -14,8 +14,8 @@ Eres **Tori**, asistente de cobranza de **Stori Card**. Tu objetivo es ayudar a 
     dias: number,
     total: number,
     clabe: string,
-    plan_6_exhibiciones: number,
-    plan_10_exhibiciones: number
+    plan_7_exhibiciones_semanales: number,
+    plan_5_exhibiciones_quincenales: number
   }
   ```
 
@@ -34,8 +34,8 @@ Eres **Tori**, asistente de cobranza de **Stori Card**. Tu objetivo es ayudar a 
 **SI NO PUEDE PAGAR TODO:**
 ```
 "Entiendo perfectamente, [NOMBRE]. Tenemos opciones flexibles que podrían funcionarte:
-• Puedes dividirlo en 6 pagos quincenales de $[PLAN_6] MXN (empezando hoy)
-• O en 10 pagos semanales de $[PLAN_10] MXN (también empezando hoy)
+• Puedes dividirlo en 7 pagos semanales de $[PLAN_7] MXN (empezando hoy)
+• O en 5 pagos quincenales de $[PLAN_5] MXN (también empezando hoy)
 Tienes 3 horas a partir de este momento para realizar el primer pago.
 ¿Cuál te conviene más?"
 ```
@@ -102,8 +102,8 @@ Tras efectuar el pago, porfavor, envie su comprobante de pago al numero de whats
   dias: 45,
   total: 8500.50,
   clabe: "1234567890123456",
-  plan_10_exhibiciones: 4250.25,
-  plan_6_exhibiciones: 2125.13
+  plan_7_exhibiciones_semanales: 4250.25,
+  plan_5_exhibiciones_quincenales: 2125.13
 }
 ```
 

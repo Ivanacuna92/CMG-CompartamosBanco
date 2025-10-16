@@ -2,6 +2,31 @@ import { clientePool } from "../db/configs.js";
 import { normalizeText } from "./processMessage.js";
 
 /**
+ * Función helper para reintentar queries con backoff exponencial
+ */
+async function retryQuery(queryFn, maxRetries = 3, initialDelay = 1000) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 [retryQuery] Intento ${attempt} de ${maxRetries}`);
+      return await queryFn();
+    } catch (error) {
+      lastError = error;
+      console.error(`❌ [retryQuery] Error en intento ${attempt}:`, error.message);
+
+      if (attempt < maxRetries) {
+        const delay = initialDelay * Math.pow(2, attempt - 1);
+        console.log(`⏳ [retryQuery] Reintentando en ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+/**
  * Busca un cliente en la tabla `datos` por teléfono o correo y nombre ya normalizado
  */
 export async function getUserByValidation(method, contact, nombreNormalizado) {
@@ -15,10 +40,12 @@ export async function getUserByValidation(method, contact, nombreNormalizado) {
     console.log("   - Contacto:", valor);
     console.log("   - Nombre normalizado:", nombreNormalizado);
 
-    const [rows] = await clientePool.query(
-      `SELECT * FROM datos WHERE ${campo} = ?`,
-      [valor]
-    );
+    const [rows] = await retryQuery(async () => {
+      return await clientePool.query(
+        `SELECT * FROM datos WHERE ${campo} = ?`,
+        [valor]
+      );
+    });
 
     console.log(`📊 [getUserByValidation] Se encontraron ${rows.length} registros con ese ${method}`);
 
@@ -52,10 +79,12 @@ export async function getUserByValidation(method, contact, nombreNormalizado) {
  */
 export async function getUserByCredito(credito) {
   try {
-    const [rows] = await clientePool.query(
-      `SELECT * FROM datos WHERE cuenta = ?`,
-      [credito]
-    );
+    const [rows] = await retryQuery(async () => {
+      return await clientePool.query(
+        `SELECT * FROM datos WHERE cuenta = ?`,
+        [credito]
+      );
+    });
     return rows[0] || null;
   } catch (error) {
     console.error("❌ Error al obtener cliente por cuenta:", error);
