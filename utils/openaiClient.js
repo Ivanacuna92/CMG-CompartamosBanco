@@ -58,7 +58,8 @@ Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el u
 
 /**
  * Genera el siguiente plan disponible en la negociación gradual
- * Orden de ofrecimiento: 10 semanal -> 9 semanal -> 8 semanal -> 6 quincenal
+ * Orden de ofrecimiento: 8 semanal -> 9 semanal -> 10 semanal -> 6 quincenal
+ * (De más exhibiciones a menos = De menor pago por exhibición a mayor)
  *
  * @param {Object} registro - Datos del cliente
  * @param {number} nivelNegociacion - Nivel actual de negociación (1-4)
@@ -73,14 +74,14 @@ export function generateNextNegotiationPlan(registro, nivelNegociacion = 1) {
     plan_6_exhibiciones_quincenales
   } = registro;
 
-  // Definir el orden de los planes
+  // Definir el orden de los planes (de más exhibiciones a menos)
   const planesDisponibles = [
     {
       nivel: 1,
-      nombre: "10 exhibiciones semanales",
-      valor: plan_10_exhibiciones_semanales,
+      nombre: "8 exhibiciones semanales",
+      valor: plan_8_exhibiciones_semanales,
       tipo: "semanal",
-      key: "plan_10"
+      key: "plan_8"
     },
     {
       nivel: 2,
@@ -91,10 +92,10 @@ export function generateNextNegotiationPlan(registro, nivelNegociacion = 1) {
     },
     {
       nivel: 3,
-      nombre: "8 exhibiciones semanales",
-      valor: plan_8_exhibiciones_semanales,
+      nombre: "10 exhibiciones semanales",
+      valor: plan_10_exhibiciones_semanales,
       tipo: "semanal",
-      key: "plan_8"
+      key: "plan_10"
     },
     {
       nivel: 4,
