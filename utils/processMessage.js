@@ -1,5 +1,5 @@
 // utils/processMessage.js
-import { callAIConversation, generateUserSummary } from "./openaiClient.js";
+import { callAIConversation, generateUserSummary, generateNegotiationPlans } from "./openaiClient.js";
 import { getUserByValidation } from "./dbUsers.js"; // <-- se usa BD real
 
 /**
@@ -122,7 +122,46 @@ export async function processMessage(session, userMessage) {
     return summary;
   }
 
-  // 5) conversacion_general: IA normal
+  // 5) conversacion_general: detectar si el cliente solicita más opciones de pago
+  // Palabras clave que indican que el cliente necesita planes adicionales
+  const keywordsNegociacion = [
+    "no puedo",
+    "muy alto",
+    "muy caro",
+    "mucho dinero",
+    "otras opciones",
+    "más opciones",
+    "algo más bajo",
+    "algo más barato",
+    "más plazo",
+    "más tiempo",
+    "menos pago",
+    "menor pago",
+    "no me alcanza",
+    "no tengo",
+    "todavía es alto",
+    "todavía es caro",
+    "todavía es mucho",
+    "algo menor"
+  ];
+
+  const mensajeLower = txtLower.toLowerCase();
+  const necesitaNegociacion = keywordsNegociacion.some(keyword => mensajeLower.includes(keyword));
+
+  // Si está en conversacion_general y tiene registro, verificar si necesita negociación
+  if (session.phase === "conversacion_general" && session.registro && necesitaNegociacion) {
+    console.log("🔄 [processMessage] Cliente solicita opciones adicionales de pago");
+
+    // Marcar que ya se ofrecieron planes adicionales para no repetirlos
+    if (!session.planesAdicionalesOfrecidos) {
+      session.planesAdicionalesOfrecidos = true;
+      const planesAdicionales = await generateNegotiationPlans(session.registro);
+      session.messages.push({ role: "assistant", content: planesAdicionales });
+      return planesAdicionales;
+    }
+  }
+
+  // 6) conversacion_general: IA normal
   const normalReply = await callAIConversation(userMessage, session.messages);
   session.messages.push({ role: "assistant", content: normalReply });
   return normalReply;

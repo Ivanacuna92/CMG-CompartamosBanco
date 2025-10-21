@@ -19,7 +19,7 @@ export async function callAIConversation(userMessage, history = []) {
     content: `
 Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el usuario:
 - Sin comentarios internos ni guías de desarrollo.
-- Sin encabezados de “Reglas aplicadas” ni separadores (“---”).
+- Sin encabezados de "Reglas aplicadas" ni separadores ("---").
 - Responde siempre en una sola burbuja de chat.
     `.trim()
   };
@@ -57,6 +57,65 @@ Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el u
 }
 
 /**
+ * Genera un mensaje con las opciones adicionales de planes cuando el cliente
+ * no puede pagar con los planes iniciales (7 o 5 exhibiciones)
+ */
+export async function generateNegotiationPlans(registro) {
+  const {
+    nombre,
+    plan_10_exhibiciones_semanales,
+    plan_9_exhibiciones_semanales,
+    plan_8_exhibiciones_semanales,
+    plan_6_exhibiciones_quincenales
+  } = registro;
+
+  // Validar si los planes adicionales tienen datos válidos
+  const plan10Valido = plan_10_exhibiciones_semanales && parseFloat(plan_10_exhibiciones_semanales) > 0;
+  const plan9Valido = plan_9_exhibiciones_semanales && parseFloat(plan_9_exhibiciones_semanales) > 0;
+  const plan8Valido = plan_8_exhibiciones_semanales && parseFloat(plan_8_exhibiciones_semanales) > 0;
+  const plan6Valido = plan_6_exhibiciones_quincenales && parseFloat(plan_6_exhibiciones_quincenales) > 0;
+
+  console.log("📋 [generateNegotiationPlans] Planes adicionales disponibles:");
+  console.log(`   - plan_10_exhibiciones_semanales: $${parseFloat(plan_10_exhibiciones_semanales || 0).toFixed(2)} ${plan10Valido ? '✅' : '❌'}`);
+  console.log(`   - plan_9_exhibiciones_semanales: $${parseFloat(plan_9_exhibiciones_semanales || 0).toFixed(2)} ${plan9Valido ? '✅' : '❌'}`);
+  console.log(`   - plan_8_exhibiciones_semanales: $${parseFloat(plan_8_exhibiciones_semanales || 0).toFixed(2)} ${plan8Valido ? '✅' : '❌'}`);
+  console.log(`   - plan_6_exhibiciones_quincenales: $${parseFloat(plan_6_exhibiciones_quincenales || 0).toFixed(2)} ${plan6Valido ? '✅' : '❌'}`);
+
+  // Si no hay planes adicionales válidos, retornar mensaje de error
+  if (!plan10Valido && !plan9Valido && !plan8Valido && !plan6Valido) {
+    console.log("⚠️ [generateNegotiationPlans] No hay planes adicionales disponibles");
+    return `${nombre}, lamentablemente no tengo opciones adicionales disponibles en este momento. Te recomiendo contactar directamente a Stori:
+📱 WhatsApp: 5648615858
+📞 Teléfono: 5598161281
+
+Ellos podrán revisar tu caso y ofrecerte alternativas personalizadas.`;
+  }
+
+  // Construir el mensaje con los planes disponibles
+  let planesSemanales = [];
+  if (plan10Valido) planesSemanales.push(`• 10 pagos semanales de $${parseFloat(plan_10_exhibiciones_semanales).toFixed(2)} MXN`);
+  if (plan9Valido) planesSemanales.push(`• 9 pagos semanales de $${parseFloat(plan_9_exhibiciones_semanales).toFixed(2)} MXN`);
+  if (plan8Valido) planesSemanales.push(`• 8 pagos semanales de $${parseFloat(plan_8_exhibiciones_semanales).toFixed(2)} MXN`);
+
+  let planesQuincenales = [];
+  if (plan6Valido) planesQuincenales.push(`• 6 pagos quincenales de $${parseFloat(plan_6_exhibiciones_quincenales).toFixed(2)} MXN`);
+
+  let mensaje = `Entiendo ${nombre}, quiero ayudarte a encontrar una solución. Déjame ofrecerte otras opciones:\n\n`;
+
+  if (planesSemanales.length > 0) {
+    mensaje += `Planes Semanales:\n${planesSemanales.join('\n')}\n\n`;
+  }
+
+  if (planesQuincenales.length > 0) {
+    mensaje += `Planes Quincenales:\n${planesQuincenales.join('\n')}\n\n`;
+  }
+
+  mensaje += `Todos empiezan hoy y tienes 3 horas para el primer pago. ¿Alguno de estos te funciona mejor?`;
+
+  return mensaje;
+}
+
+/**
  * Genera un resumen para el usuario con los campos de registro actuales.
  */
 export async function generateUserSummary(registro) {
@@ -69,12 +128,20 @@ export async function generateUserSummary(registro) {
     total,
     clabe,
     plan_7_exhibiciones_semanales,
-    plan_5_exhibiciones_quincenales
+    plan_5_exhibiciones_quincenales,
+    plan_10_exhibiciones_semanales,
+    plan_9_exhibiciones_semanales,
+    plan_8_exhibiciones_semanales,
+    plan_6_exhibiciones_quincenales
   } = registro;
 
   // Validar si los planes de exhibiciones tienen datos válidos
   const plan7Valido = plan_7_exhibiciones_semanales && parseFloat(plan_7_exhibiciones_semanales) > 0;
   const plan5Valido = plan_5_exhibiciones_quincenales && parseFloat(plan_5_exhibiciones_quincenales) > 0;
+  const plan10Valido = plan_10_exhibiciones_semanales && parseFloat(plan_10_exhibiciones_semanales) > 0;
+  const plan9Valido = plan_9_exhibiciones_semanales && parseFloat(plan_9_exhibiciones_semanales) > 0;
+  const plan8Valido = plan_8_exhibiciones_semanales && parseFloat(plan_8_exhibiciones_semanales) > 0;
+  const plan6Valido = plan_6_exhibiciones_quincenales && parseFloat(plan_6_exhibiciones_quincenales) > 0;
 
   console.log("Datos Obtenidos de la BD" + `
 - nombre: ${nombre}
@@ -86,10 +153,14 @@ export async function generateUserSummary(registro) {
 - clabe: ${clabe}
 - plan_7_exhibiciones_semanales: $${parseFloat(plan_7_exhibiciones_semanales || 0).toFixed(2)} ${plan7Valido ? '✅' : '❌'}
 - plan_5_exhibiciones_quincenales: $${parseFloat(plan_5_exhibiciones_quincenales || 0).toFixed(2)} ${plan5Valido ? '✅' : '❌'}
+- plan_10_exhibiciones_semanales: $${parseFloat(plan_10_exhibiciones_semanales || 0).toFixed(2)} ${plan10Valido ? '✅' : '❌'}
+- plan_9_exhibiciones_semanales: $${parseFloat(plan_9_exhibiciones_semanales || 0).toFixed(2)} ${plan9Valido ? '✅' : '❌'}
+- plan_8_exhibiciones_semanales: $${parseFloat(plan_8_exhibiciones_semanales || 0).toFixed(2)} ${plan8Valido ? '✅' : '❌'}
+- plan_6_exhibiciones_quincenales: $${parseFloat(plan_6_exhibiciones_quincenales || 0).toFixed(2)} ${plan6Valido ? '✅' : '❌'}
 `);
 
-  // Si ambos planes son inválidos, retornar mensaje de error
-  if (!plan7Valido && !plan5Valido) {
+  // Si todos los planes son inválidos, retornar mensaje de error
+  if (!plan7Valido && !plan5Valido && !plan10Valido && !plan9Valido && !plan8Valido && !plan6Valido) {
     console.log("⚠️ [generateUserSummary] Planes de exhibiciones inválidos o en 0/null");
     return `Hola ${nombre}, hemos encontrado tu información pero algo salió mal al obtener los datos de los planes de exhibiciones desde la base de datos.
 
