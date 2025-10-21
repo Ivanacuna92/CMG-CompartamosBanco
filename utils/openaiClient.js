@@ -57,10 +57,14 @@ Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el u
 }
 
 /**
- * Genera un mensaje con las opciones adicionales de planes cuando el cliente
- * no puede pagar con los planes iniciales (7 o 5 exhibiciones)
+ * Genera el siguiente plan disponible en la negociación gradual
+ * Orden de ofrecimiento: 10 semanal -> 9 semanal -> 8 semanal -> 6 quincenal
+ *
+ * @param {Object} registro - Datos del cliente
+ * @param {number} nivelNegociacion - Nivel actual de negociación (1-4)
+ * @returns {Object} { mensaje: string, hayMasPlanes: boolean, planOfrecido: string }
  */
-export async function generateNegotiationPlans(registro) {
+export function generateNextNegotiationPlan(registro, nivelNegociacion = 1) {
   const {
     nombre,
     plan_10_exhibiciones_semanales,
@@ -69,50 +73,73 @@ export async function generateNegotiationPlans(registro) {
     plan_6_exhibiciones_quincenales
   } = registro;
 
-  // Validar si los planes adicionales tienen datos válidos
-  const plan10Valido = plan_10_exhibiciones_semanales && parseFloat(plan_10_exhibiciones_semanales) > 0;
-  const plan9Valido = plan_9_exhibiciones_semanales && parseFloat(plan_9_exhibiciones_semanales) > 0;
-  const plan8Valido = plan_8_exhibiciones_semanales && parseFloat(plan_8_exhibiciones_semanales) > 0;
-  const plan6Valido = plan_6_exhibiciones_quincenales && parseFloat(plan_6_exhibiciones_quincenales) > 0;
+  // Definir el orden de los planes
+  const planesDisponibles = [
+    {
+      nivel: 1,
+      nombre: "10 exhibiciones semanales",
+      valor: plan_10_exhibiciones_semanales,
+      tipo: "semanal",
+      key: "plan_10"
+    },
+    {
+      nivel: 2,
+      nombre: "9 exhibiciones semanales",
+      valor: plan_9_exhibiciones_semanales,
+      tipo: "semanal",
+      key: "plan_9"
+    },
+    {
+      nivel: 3,
+      nombre: "8 exhibiciones semanales",
+      valor: plan_8_exhibiciones_semanales,
+      tipo: "semanal",
+      key: "plan_8"
+    },
+    {
+      nivel: 4,
+      nombre: "6 exhibiciones quincenales",
+      valor: plan_6_exhibiciones_quincenales,
+      tipo: "quincenal",
+      key: "plan_6"
+    }
+  ];
 
-  console.log("📋 [generateNegotiationPlans] Planes adicionales disponibles:");
-  console.log(`   - plan_10_exhibiciones_semanales: $${parseFloat(plan_10_exhibiciones_semanales || 0).toFixed(2)} ${plan10Valido ? '✅' : '❌'}`);
-  console.log(`   - plan_9_exhibiciones_semanales: $${parseFloat(plan_9_exhibiciones_semanales || 0).toFixed(2)} ${plan9Valido ? '✅' : '❌'}`);
-  console.log(`   - plan_8_exhibiciones_semanales: $${parseFloat(plan_8_exhibiciones_semanales || 0).toFixed(2)} ${plan8Valido ? '✅' : '❌'}`);
-  console.log(`   - plan_6_exhibiciones_quincenales: $${parseFloat(plan_6_exhibiciones_quincenales || 0).toFixed(2)} ${plan6Valido ? '✅' : '❌'}`);
+  console.log(`📋 [generateNextNegotiationPlan] Nivel de negociación: ${nivelNegociacion}`);
 
-  // Si no hay planes adicionales válidos, retornar mensaje de error
-  if (!plan10Valido && !plan9Valido && !plan8Valido && !plan6Valido) {
-    console.log("⚠️ [generateNegotiationPlans] No hay planes adicionales disponibles");
-    return `${nombre}, lamentablemente no tengo opciones adicionales disponibles en este momento. Te recomiendo contactar directamente a Stori:
-📱 WhatsApp: 5648615858
-📞 Teléfono: 5598161281
+  // Buscar el siguiente plan válido desde el nivel actual
+  for (let i = nivelNegociacion - 1; i < planesDisponibles.length; i++) {
+    const plan = planesDisponibles[i];
+    const esValido = plan.valor && parseFloat(plan.valor) > 0;
 
-Ellos podrán revisar tu caso y ofrecerte alternativas personalizadas.`;
+    console.log(`   🔍 Revisando ${plan.nombre}: $${parseFloat(plan.valor || 0).toFixed(2)} ${esValido ? '✅' : '❌'}`);
+
+    if (esValido) {
+      const monto = parseFloat(plan.valor).toFixed(2);
+      const hayMasPlanes = planesDisponibles.slice(i + 1).some(p => p.valor && parseFloat(p.valor) > 0);
+
+      console.log(`   ✅ Plan seleccionado: ${plan.nombre} - $${monto} MXN`);
+      console.log(`   📊 ¿Hay más planes disponibles?: ${hayMasPlanes ? 'Sí' : 'No'}`);
+
+      const mensaje = `Entiendo ${nombre}, ¿qué te parece esta opción? Puedes hacer ${plan.nombre} de $${monto} MXN (empezando hoy). Tienes 3 horas para realizar el primer pago. ¿Te funciona esta opción?`;
+
+      return {
+        mensaje,
+        hayMasPlanes,
+        planOfrecido: plan.key,
+        siguienteNivel: plan.nivel + 1
+      };
+    }
   }
 
-  // Construir el mensaje con los planes disponibles
-  let planesSemanales = [];
-  if (plan10Valido) planesSemanales.push(`• 10 pagos semanales de $${parseFloat(plan_10_exhibiciones_semanales).toFixed(2)} MXN`);
-  if (plan9Valido) planesSemanales.push(`• 9 pagos semanales de $${parseFloat(plan_9_exhibiciones_semanales).toFixed(2)} MXN`);
-  if (plan8Valido) planesSemanales.push(`• 8 pagos semanales de $${parseFloat(plan_8_exhibiciones_semanales).toFixed(2)} MXN`);
-
-  let planesQuincenales = [];
-  if (plan6Valido) planesQuincenales.push(`• 6 pagos quincenales de $${parseFloat(plan_6_exhibiciones_quincenales).toFixed(2)} MXN`);
-
-  let mensaje = `Entiendo ${nombre}, quiero ayudarte a encontrar una solución. Déjame ofrecerte otras opciones:\n\n`;
-
-  if (planesSemanales.length > 0) {
-    mensaje += `Planes Semanales:\n${planesSemanales.join('\n')}\n\n`;
-  }
-
-  if (planesQuincenales.length > 0) {
-    mensaje += `Planes Quincenales:\n${planesQuincenales.join('\n')}\n\n`;
-  }
-
-  mensaje += `Todos empiezan hoy y tienes 3 horas para el primer pago. ¿Alguno de estos te funciona mejor?`;
-
-  return mensaje;
+  // Si no hay más planes disponibles
+  console.log("⚠️ [generateNextNegotiationPlan] No hay más planes disponibles");
+  return {
+    mensaje: `${nombre}, lamentablemente ya no tengo más opciones de pago disponibles. Te recomiendo contactar directamente a Stori para explorar alternativas:\n📱 WhatsApp: 5648615858\n📞 Teléfono: 5598161281\n\nEllos podrán revisar tu caso de manera personalizada.`,
+    hayMasPlanes: false,
+    planOfrecido: null,
+    siguienteNivel: null
+  };
 }
 
 /**

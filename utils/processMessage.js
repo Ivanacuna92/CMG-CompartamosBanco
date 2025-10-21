@@ -1,5 +1,5 @@
 // utils/processMessage.js
-import { callAIConversation, generateUserSummary, generateNegotiationPlans } from "./openaiClient.js";
+import { callAIConversation, generateUserSummary, generateNextNegotiationPlan } from "./openaiClient.js";
 import { getUserByValidation } from "./dbUsers.js"; // <-- se usa BD real
 
 /**
@@ -122,7 +122,7 @@ export async function processMessage(session, userMessage) {
     return summary;
   }
 
-  // 5) conversacion_general: detectar si el cliente solicita más opciones de pago
+  // 5) conversacion_general: detectar si el cliente solicita más opciones de pago (NEGOCIACIÓN GRADUAL)
   // Palabras clave que indican que el cliente necesita planes adicionales
   const keywordsNegociacion = [
     "no puedo",
@@ -142,7 +142,9 @@ export async function processMessage(session, userMessage) {
     "todavía es alto",
     "todavía es caro",
     "todavía es mucho",
-    "algo menor"
+    "algo menor",
+    "no tengo tanto",
+    "es mucho para mí"
   ];
 
   const mensajeLower = txtLower.toLowerCase();
@@ -152,13 +154,24 @@ export async function processMessage(session, userMessage) {
   if (session.phase === "conversacion_general" && session.registro && necesitaNegociacion) {
     console.log("🔄 [processMessage] Cliente solicita opciones adicionales de pago");
 
-    // Marcar que ya se ofrecieron planes adicionales para no repetirlos
-    if (!session.planesAdicionalesOfrecidos) {
-      session.planesAdicionalesOfrecidos = true;
-      const planesAdicionales = await generateNegotiationPlans(session.registro);
-      session.messages.push({ role: "assistant", content: planesAdicionales });
-      return planesAdicionales;
+    // Inicializar el nivel de negociación si no existe
+    if (!session.nivelNegociacion) {
+      session.nivelNegociacion = 1;
     }
+
+    // Generar el siguiente plan disponible
+    const resultado = generateNextNegotiationPlan(session.registro, session.nivelNegociacion);
+
+    // Actualizar el nivel para la próxima negociación
+    if (resultado.hayMasPlanes) {
+      session.nivelNegociacion = resultado.siguienteNivel;
+      console.log(`📊 [processMessage] Nivel de negociación actualizado a: ${session.nivelNegociacion}`);
+    } else {
+      console.log(`⚠️ [processMessage] No hay más planes disponibles`);
+    }
+
+    session.messages.push({ role: "assistant", content: resultado.mensaje });
+    return resultado.mensaje;
   }
 
   // 6) conversacion_general: IA normal
