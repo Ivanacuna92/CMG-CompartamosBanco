@@ -57,6 +57,80 @@ Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el u
 }
 
 /**
+ * Genera el siguiente plan quincenal disponible
+ * Primero ofrece 5 exhibiciones quincenales, luego 6 exhibiciones quincenales
+ *
+ * @param {Object} registro - Datos del cliente
+ * @param {number} nivelQuincenal - Nivel actual de negociación quincenal (1-2)
+ * @returns {Object} { mensaje: string, hayMasPlanes: boolean, planOfrecido: string }
+ */
+export function generateQuincenalPlan(registro, nivelQuincenal = 1) {
+  const {
+    nombre,
+    plan_5_exhibiciones_quincenales,
+    plan_6_exhibiciones_quincenales
+  } = registro;
+
+  const planesQuincenales = [
+    {
+      nivel: 1,
+      nombre: "5 pagos quincenales",
+      valor: plan_5_exhibiciones_quincenales,
+      key: "plan_5_quincenal"
+    },
+    {
+      nivel: 2,
+      nombre: "6 exhibiciones quincenales",
+      valor: plan_6_exhibiciones_quincenales,
+      key: "plan_6_quincenal"
+    }
+  ];
+
+  console.log(`📋 [generateQuincenalPlan] Nivel quincenal: ${nivelQuincenal}`);
+
+  // Buscar el plan quincenal correspondiente al nivel
+  for (let i = nivelQuincenal - 1; i < planesQuincenales.length; i++) {
+    const plan = planesQuincenales[i];
+    const esValido = plan.valor && parseFloat(plan.valor) > 0;
+
+    console.log(`   🔍 Revisando ${plan.nombre}: $${parseFloat(plan.valor || 0).toFixed(2)} ${esValido ? '✅' : '❌'}`);
+
+    if (esValido) {
+      const monto = parseFloat(plan.valor).toFixed(2);
+      const hayMasPlanes = planesQuincenales.slice(i + 1).some(p => p.valor && parseFloat(p.valor) > 0);
+
+      console.log(`   ✅ Plan quincenal seleccionado: ${plan.nombre} - $${monto} MXN`);
+      console.log(`   📊 ¿Hay más planes quincenales?: ${hayMasPlanes ? 'Sí' : 'No'}`);
+
+      let mensaje;
+      if (nivelQuincenal === 1) {
+        // Primer plan quincenal (5 exhibiciones)
+        mensaje = `Entiendo ${nombre}, sin problema. Tengo una opción quincenal para ti:\n• Puedes hacer ${plan.nombre} de $${monto} MXN (empezando hoy)\nTienes 3 horas a partir de este momento para realizar el primer pago.\n¿Te funciona esta opción?`;
+      } else {
+        // Segundo plan quincenal (6 exhibiciones)
+        mensaje = `Entiendo ${nombre}, ¿qué te parece esta opción? Puedes hacer ${plan.nombre} de $${monto} MXN (empezando hoy). Tienes 3 horas para realizar el primer pago. ¿Te funciona esta opción?`;
+      }
+
+      return {
+        mensaje,
+        hayMasPlanes,
+        planOfrecido: plan.key,
+        siguienteNivel: plan.nivel + 1
+      };
+    }
+  }
+
+  // Si no hay más planes quincenales disponibles
+  console.log("⚠️ [generateQuincenalPlan] No hay más planes quincenales disponibles");
+  return {
+    mensaje: `Entiendo tu situación, ${nombre}. Te recomendaría contactar directamente a Stori para explorar otras alternativas. Puedes comunicarte por WhatsApp al 5648615858 o llamar al 5598161281. Ellos podrán revisar opciones adicionales contigo.`,
+    hayMasPlanes: false,
+    planOfrecido: null,
+    siguienteNivel: null
+  };
+}
+
+/**
  * Genera el siguiente plan disponible en la negociación gradual
  * Orden de ofrecimiento: 8 semanal -> 9 semanal -> 10 semanal -> 6 quincenal
  * (De más exhibiciones a menos = De menor pago por exhibición a mayor)

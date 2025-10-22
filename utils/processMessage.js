@@ -1,5 +1,5 @@
 // utils/processMessage.js
-import { callAIConversation, generateUserSummary, generateNextNegotiationPlan } from "./openaiClient.js";
+import { callAIConversation, generateUserSummary, generateNextNegotiationPlan, generateQuincenalPlan } from "./openaiClient.js";
 import { getUserByValidation } from "./dbUsers.js"; // <-- se usa BD real
 
 /**
@@ -123,7 +123,25 @@ export async function processMessage(session, userMessage) {
   }
 
   // 5) conversacion_general: detectar si el cliente solicita más opciones de pago (NEGOCIACIÓN GRADUAL)
-  // Palabras clave que indican que el cliente necesita planes adicionales
+  // Palabras clave que indican que el cliente prefiere pago quincenal
+  const keywordsQuincenal = [
+    "no puedo pagar semanalmente",
+    "no puedo semanal",
+    "no puedo semanales",
+    "prefiero quincenal",
+    "quiero quincenal",
+    "cada 15 días",
+    "cada quince días",
+    "cada 15 dias",
+    "cada quince dias",
+    "de 15 en 15",
+    "mejor quincenal",
+    "quincenalmente",
+    "pago quincenal",
+    "pagos quincenales"
+  ];
+
+  // Palabras clave que indican que el cliente necesita planes adicionales (para planes semanales)
   const keywordsNegociacion = [
     "no puedo",
     "muy alto",
@@ -148,9 +166,34 @@ export async function processMessage(session, userMessage) {
   ];
 
   const mensajeLower = txtLower.toLowerCase();
+  const prefiereQuincenal = keywordsQuincenal.some(keyword => mensajeLower.includes(keyword));
   const necesitaNegociacion = keywordsNegociacion.some(keyword => mensajeLower.includes(keyword));
 
-  // Si está en conversacion_general y tiene registro, verificar si necesita negociación
+  // Si el cliente prefiere pago quincenal (FLUJO ESPECIAL QUINCENAL)
+  if (session.phase === "conversacion_general" && session.registro && prefiereQuincenal) {
+    console.log("💳 [processMessage] Cliente prefiere pago quincenal");
+
+    // Inicializar el nivel de negociación quincenal si no existe
+    if (!session.nivelQuincenal) {
+      session.nivelQuincenal = 1;
+    }
+
+    // Generar el siguiente plan quincenal disponible
+    const resultado = generateQuincenalPlan(session.registro, session.nivelQuincenal);
+
+    // Actualizar el nivel para la próxima negociación quincenal
+    if (resultado.hayMasPlanes) {
+      session.nivelQuincenal = resultado.siguienteNivel;
+      console.log(`📊 [processMessage] Nivel quincenal actualizado a: ${session.nivelQuincenal}`);
+    } else {
+      console.log(`⚠️ [processMessage] No hay más planes quincenales disponibles`);
+    }
+
+    session.messages.push({ role: "assistant", content: resultado.mensaje });
+    return resultado.mensaje;
+  }
+
+  // Si está en conversacion_general y tiene registro, verificar si necesita negociación (PLANES SEMANALES)
   if (session.phase === "conversacion_general" && session.registro && necesitaNegociacion) {
     console.log("🔄 [processMessage] Cliente solicita opciones adicionales de pago");
 
