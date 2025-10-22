@@ -123,51 +123,74 @@ export async function processMessage(session, userMessage) {
   }
 
   // 5) conversacion_general: detectar si el cliente solicita más opciones de pago (NEGOCIACIÓN GRADUAL)
-  // Palabras clave que indican que el cliente prefiere pago quincenal
-  const keywordsQuincenal = [
-    "no puedo pagar semanalmente",
-    "no puedo semanal",
-    "no puedo semanales",
-    "prefiero quincenal",
-    "quiero quincenal",
-    "cada 15 días",
-    "cada quince días",
-    "cada 15 dias",
-    "cada quince dias",
-    "de 15 en 15",
-    "mejor quincenal",
-    "quincenalmente",
-    "pago quincenal",
-    "pagos quincenales"
-  ];
 
-  // Palabras clave que indican que el cliente necesita planes adicionales (para planes semanales)
-  const keywordsNegociacion = [
-    "no puedo",
-    "muy alto",
-    "muy caro",
-    "mucho dinero",
-    "otras opciones",
-    "más opciones",
-    "algo más bajo",
-    "algo más barato",
-    "más plazo",
-    "más tiempo",
-    "menos pago",
-    "menor pago",
-    "no me alcanza",
-    "no tengo",
-    "todavía es alto",
-    "todavía es caro",
-    "todavía es mucho",
-    "algo menor",
-    "no tengo tanto",
-    "es mucho para mí"
-  ];
+  /**
+   * Función mejorada para detectar si el cliente prefiere pago quincenal
+   * Usa detección más robusta con patrones y normalización
+   */
+  function detectarPreferenciaQuincenal(mensaje) {
+    const mensajeNormalizado = mensaje.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
+      .replace(/\s+/g, " ") // Normalizar espacios
+      .trim();
+
+    // Patrones más flexibles para detectar preferencia quincenal
+    const patronesQuincenal = [
+      /no\s+puedo\s+(pagar\s+)?(semanal(mente|es)?|por\s+semana)/i,
+      /no\s+puedo\s+(con\s+)?(el\s+)?(pago\s+)?semanal/i,
+      /prefiero\s+(pago\s+)?quincenal/i,
+      /quiero\s+(pago\s+)?quincenal/i,
+      /mejor\s+(pago\s+)?quincenal/i,
+      /cada\s+(15|quince)\s+(dias|días)/i,
+      /de\s+15\s+en\s+15/i,
+      /quincenalmente/i,
+      /(pago|pagos)\s+quincenal(es)?/i,
+      /cada\s+quincena/i,
+      /por\s+quincena/i
+    ];
+
+    // Verificar si algún patrón coincide
+    return patronesQuincenal.some(patron => patron.test(mensajeNormalizado));
+  }
+
+  /**
+   * Función mejorada para detectar si el cliente necesita negociación (planes semanales)
+   * Solo activa si NO es una solicitud de pago quincenal
+   */
+  function detectarNecesidadNegociacion(mensaje, esQuincenal) {
+    // Si ya detectamos que prefiere quincenal, no activar negociación semanal
+    if (esQuincenal) {
+      return false;
+    }
+
+    const mensajeNormalizado = mensaje.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const patronesNegociacion = [
+      /no\s+puedo/i,
+      /(muy|demasiado)\s+(alto|caro)/i,
+      /mucho\s+dinero/i,
+      /(otras|mas|más)\s+opciones/i,
+      /algo\s+(mas|más)\s+(bajo|barato)/i,
+      /(mas|más)\s+(plazo|tiempo)/i,
+      /(menos|menor)\s+pago/i,
+      /no\s+me\s+alcanza/i,
+      /no\s+tengo(\s+(tanto|suficiente))?/i,
+      /(todavia|todavía|aun|aún)\s+es\s+(alto|caro|mucho)/i,
+      /algo\s+menor/i,
+      /es\s+mucho\s+para\s+(mi|mí)/i
+    ];
+
+    return patronesNegociacion.some(patron => patron.test(mensajeNormalizado));
+  }
 
   const mensajeLower = txtLower.toLowerCase();
-  const prefiereQuincenal = keywordsQuincenal.some(keyword => mensajeLower.includes(keyword));
-  const necesitaNegociacion = keywordsNegociacion.some(keyword => mensajeLower.includes(keyword));
+  const prefiereQuincenal = detectarPreferenciaQuincenal(mensajeLower);
+  const necesitaNegociacion = detectarNecesidadNegociacion(mensajeLower, prefiereQuincenal);
 
   // Si el cliente prefiere pago quincenal (FLUJO ESPECIAL QUINCENAL)
   if (session.phase === "conversacion_general" && session.registro && prefiereQuincenal) {
