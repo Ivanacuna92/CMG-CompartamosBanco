@@ -14,6 +14,14 @@ const openai = new OpenAI({
  * fuerza a la IA a no exponer sus reglas internas.
  */
 export async function callAIConversation(userMessage, history = []) {
+  // Obtener la fecha actual formateada en español
+  const fechaActual = new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   const systemMsg = {
     role: "system",
     content: `
@@ -21,6 +29,10 @@ Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el u
 - Sin comentarios internos ni guías de desarrollo.
 - Sin encabezados de "Reglas aplicadas" ni separadores ("---").
 - Responde siempre en una sola burbuja de chat.
+
+INFORMACIÓN IMPORTANTE DEL SISTEMA:
+- La fecha de hoy es: ${fechaActual}
+- Si el usuario pregunta qué día es hoy, responde con esta fecha exacta.
     `.trim()
   };
 
