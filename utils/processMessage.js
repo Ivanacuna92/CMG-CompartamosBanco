@@ -1,6 +1,6 @@
 // utils/processMessage.js
 import { callAIConversation, generateUserSummary, generateNextNegotiationPlan, generateQuincenalPlan } from "./openaiClient.js";
-import { getUserByValidation } from "./dbUsers.js"; // <-- se usa BD real
+import { getUserByValidation, checkContactExists } from "./dbUsers.js"; // <-- se usa BD real
 
 /**
  * Normaliza texto: elimina acentos, múltiples espacios y convierte a mayúsculas
@@ -79,8 +79,11 @@ export async function processMessage(session, userMessage) {
     return iaResp;
   }
 
-  // 3) esperando_contacto: validar formato
+  // 3) esperando_contacto: validar formato Y existencia en BD
   if (session.phase === "esperando_contacto") {
+    let contactoValido = false;
+    let contactoNormalizado = "";
+
     if (session.method === "telefono") {
       if (!telefonoRegex.test(userMessage.trim())) {
         const prompt = `El usuario ingresó: "${userMessage}". Recuerda que tu número de teléfono debe tener 10 dígitos.`;
@@ -88,7 +91,8 @@ export async function processMessage(session, userMessage) {
         session.messages.push({ role: "assistant", content: iaResp });
         return iaResp;
       }
-      session.contact = userMessage.trim();
+      contactoNormalizado = userMessage.trim();
+      contactoValido = true;
     } else {
       if (!correoRegex.test(userMessage.trim())) {
         const prompt = `El usuario ingresó: "${userMessage}". Recuerda que necesitamos un correo electrónico válido.`;
@@ -96,12 +100,28 @@ export async function processMessage(session, userMessage) {
         session.messages.push({ role: "assistant", content: iaResp });
         return iaResp;
       }
-      session.contact = userMessage.trim().toLowerCase();
+      contactoNormalizado = userMessage.trim().toLowerCase();
+      contactoValido = true;
     }
-    session.phase = "esperando_nombre";
-    const askName = "Gracias. Ahora, por favor ingresa tu nombre completo.";
-    session.messages.push({ role: "assistant", content: askName });
-    return askName;
+
+    // Verificar si el contacto existe en la base de datos ANTES de pedir el nombre
+    if (contactoValido) {
+      const existeEnBD = await checkContactExists(session.method, contactoNormalizado);
+
+      if (!existeEnBD) {
+        const tipoContacto = session.method === "telefono" ? "número de teléfono" : "correo electrónico";
+        const errorMsg = `El ${tipoContacto} "${contactoNormalizado}" no se encuentra registrado en nuestro sistema. Por favor, verifica e ingresa un ${tipoContacto} válido.`;
+        session.messages.push({ role: "assistant", content: errorMsg });
+        return errorMsg;
+      }
+
+      // Si existe, guardamos el contacto y pasamos a pedir el nombre
+      session.contact = contactoNormalizado;
+      session.phase = "esperando_nombre";
+      const askName = "Gracias. Ahora, por favor ingresa tu nombre completo.";
+      session.messages.push({ role: "assistant", content: askName });
+      return askName;
+    }
   }
 
   // 4) esperando_nombre: validar en base de datos real

@@ -27,6 +27,37 @@ async function retryQuery(queryFn, maxRetries = 3, initialDelay = 1000) {
 }
 
 /**
+ * Verifica si existe un cliente con el teléfono o correo proporcionado
+ * Retorna true si existe, false si no existe
+ */
+export async function checkContactExists(method, contact) {
+  try {
+    const isTelefono = method === "telefono";
+    const campo = isTelefono ? "telefono" : "LOWER(correo)";
+    const valor = contact.trim().toLowerCase();
+
+    console.log("🔍 [checkContactExists] Verificando existencia de:");
+    console.log("   - Método:", method);
+    console.log("   - Contacto:", valor);
+
+    const [rows] = await retryQuery(async () => {
+      return await clientePool.query(
+        `SELECT COUNT(*) as total FROM datos WHERE ${campo} = ?`,
+        [valor]
+      );
+    });
+
+    const existe = rows[0].total > 0;
+    console.log(`${existe ? "✅" : "❌"} [checkContactExists] Contacto ${existe ? "encontrado" : "NO encontrado"}`);
+
+    return existe;
+  } catch (err) {
+    console.error("❌ Error en checkContactExists:", err.message);
+    return false;
+  }
+}
+
+/**
  * Busca un cliente en la tabla `datos` por teléfono o correo y nombre ya normalizado
  */
 export async function getUserByValidation(method, contact, nombreNormalizado) {
