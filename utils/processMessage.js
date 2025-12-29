@@ -36,6 +36,41 @@ export async function processMessage(session, userMessage) {
   const txtLower = userMessage.trim().toLowerCase();
   const nombreNorm = normalizeText(userMessage);
 
+  /**
+   * Función para detectar si el usuario indica que NO es el titular de la cuenta
+   * Detecta frases como "soy la mamá", "soy el papá", "soy familiar", etc.
+   */
+  function detectarNoTitular(mensaje) {
+    const mensajeNormalizado = mensaje.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const patronesNoTitular = [
+      /soy\s+(la\s+)?(mama|madre|mami)/i,
+      /soy\s+(el\s+)?(papa|padre|papi)/i,
+      /soy\s+(el\s+|la\s+)?(esposo|esposa|marido|mujer)/i,
+      /soy\s+(el\s+|la\s+)?(hermano|hermana)/i,
+      /soy\s+(el\s+|la\s+)?(hijo|hija)/i,
+      /soy\s+(el\s+|la\s+)?(tio|tia|primo|prima)/i,
+      /soy\s+(el\s+|la\s+)?(abuelo|abuela)/i,
+      /soy\s+(un\s+|una\s+)?familiar/i,
+      /soy\s+(el\s+|la\s+)?pariente/i,
+      /no\s+soy\s+(el\s+|la\s+)?titular/i,
+      /hablo\s+en\s+nombre\s+de/i,
+      /llamo\s+por\s+(mi\s+)?(mama|papa|esposo|esposa|hijo|hija|hermano|hermana)/i,
+      /me\s+hare\s+cargo\s+del\s+(adeudo|pago|credito)/i,
+      /yo\s+(me\s+)?hare\s+cargo/i,
+      /pagare\s+(el\s+adeudo\s+)?por\s+(el|ella|mi)/i,
+      /vengo\s+de\s+parte\s+de/i,
+      /represento\s+a/i,
+      /(el|la)\s+titular\s+(no\s+puede|no\s+esta|fallecio|murio)/i
+    ];
+
+    return patronesNoTitular.some(patron => patron.test(mensajeNormalizado));
+  }
+
   // 1) inicio: mostrar botones
   if (!session.phase || session.phase === "inicio") {
     const interactive = {
@@ -126,6 +161,17 @@ export async function processMessage(session, userMessage) {
 
   // 4) esperando_nombre: validar en base de datos real
   if (session.phase === "esperando_nombre") {
+    // Verificar si indica que no es el titular ANTES de validar
+    if (detectarNoTitular(txtLower)) {
+      console.log("🚫 [processMessage] Detectado en fase nombre: usuario indica que NO es el titular");
+
+      const mensajeNoTitular = "Entendemos tu situación, sin embargo por políticas de protección de datos solo podemos proporcionar información y gestionar la cuenta directamente con el titular. Te sugerimos que el titular se comunique con nosotros para poder ayudarle.";
+
+      session.phase = "bloqueado_no_titular";
+      session.messages.push({ role: "assistant", content: mensajeNoTitular });
+      return mensajeNoTitular;
+    }
+
     const registro = await getUserByValidation(session.method, session.contact, nombreNorm);
     if (!registro) {
       const prompt = `El usuario escribió: "${userMessage}". No encontré un registro con esa información. Por favor, ingresa tu nombre completo como aparece en tu cuenta.`;
@@ -209,8 +255,30 @@ export async function processMessage(session, userMessage) {
   }
 
   const mensajeLower = txtLower.toLowerCase();
+  const esNoTitular = detectarNoTitular(mensajeLower);
   const prefiereQuincenal = detectarPreferenciaQuincenal(mensajeLower);
   const necesitaNegociacion = detectarNecesidadNegociacion(mensajeLower, prefiereQuincenal);
+
+  // VALIDACIÓN DE NO TITULAR - Bloquear si detectamos que no es el titular
+  if (session.phase === "conversacion_general" && esNoTitular) {
+    console.log("🚫 [processMessage] Detectado: usuario indica que NO es el titular");
+
+    const mensajeNoTitular = "Entendemos tu situación, sin embargo por políticas de protección de datos solo podemos proporcionar información y gestionar la cuenta directamente con el titular. Te sugerimos que el titular se comunique con nosotros para poder ayudarle.";
+
+    // Limpiar datos sensibles de la sesión
+    session.registro = null;
+    session.phase = "bloqueado_no_titular";
+
+    session.messages.push({ role: "assistant", content: mensajeNoTitular });
+    return mensajeNoTitular;
+  }
+
+  // Si ya está bloqueado por no ser titular, mantener el bloqueo
+  if (session.phase === "bloqueado_no_titular") {
+    const mensajeBloqueo = "Por políticas de protección de datos, solo podemos atender al titular de la cuenta. Si el titular desea comunicarse con nosotros, con gusto le atenderemos.";
+    session.messages.push({ role: "assistant", content: mensajeBloqueo });
+    return mensajeBloqueo;
+  }
 
   // Si el cliente prefiere pago quincenal (FLUJO ESPECIAL QUINCENAL)
   if (session.phase === "conversacion_general" && session.registro && prefiereQuincenal) {
