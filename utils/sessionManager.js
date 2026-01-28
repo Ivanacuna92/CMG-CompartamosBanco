@@ -1,11 +1,62 @@
 // utils/sessionManager.js
 import sqlite3 from "sqlite3";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync, accessSync, constants, unlinkSync } from "fs";
+import path from "path";
 
-// Inicializar SQLite (se guarda en sessions.db)
+// Determinar la ruta de la base de datos
+// Prioridad: variable de entorno > /tmp (más seguro en contenedores) > directorio actual
+function getDbPath() {
+  if (process.env.SESSIONS_DB_PATH) {
+    return process.env.SESSIONS_DB_PATH;
+  }
+
+  // En contenedores, /tmp siempre tiene permisos de escritura
+  const tmpPath = "/tmp/sessions.db";
+  const localPath = "./sessions.db";
+
+  // Si ya existe en local y es escribible, usarlo
+  if (existsSync(localPath)) {
+    try {
+      accessSync(localPath, constants.W_OK);
+      return localPath;
+    } catch {
+      console.warn("⚠️ sessions.db existe pero no es escribible, usando /tmp");
+      return tmpPath;
+    }
+  }
+
+  // Si no existe, intentar crear en local, si falla usar /tmp
+  try {
+    accessSync(".", constants.W_OK);
+    return localPath;
+  } catch {
+    console.warn("⚠️ Directorio actual no es escribible, usando /tmp");
+    return tmpPath;
+  }
+}
+
+const DB_PATH = getDbPath();
+console.log(`📁 Base de datos SQLite: ${DB_PATH}`);
+
+// Inicializar SQLite
 const sqlite = sqlite3.verbose();
-const sessionsDB = new sqlite.Database("./sessions.db", (err) => {
-  if (err) console.error("Error conectando a SQLite:", err);
+const sessionsDB = new sqlite.Database(DB_PATH, (err) => {
+  if (err) {
+    console.error("❌ Error conectando a SQLite:", err);
+    // Si falla por permisos, intentar eliminar y recrear
+    if (err.code === "SQLITE_READONLY" || err.code === "SQLITE_CANTOPEN") {
+      try {
+        if (existsSync(DB_PATH)) {
+          unlinkSync(DB_PATH);
+          console.log("🔄 Archivo corrupto eliminado, reinicia la aplicación");
+        }
+      } catch (e) {
+        console.error("❌ No se pudo eliminar el archivo:", e.message);
+      }
+    }
+  } else {
+    console.log("✅ SQLite conectado correctamente");
+  }
 });
 
 // Crear tabla de sesiones (si no existe)
@@ -72,7 +123,15 @@ export function saveSession(userId, conversationObj) {
        ON CONFLICT(userId) DO UPDATE SET conversation = excluded.conversation, lastUpdated = excluded.lastUpdated`,
       [userId, convStr, now],
       (err) => {
-        if (err) return reject(err);
+        if (err) {
+          // Si es error de solo lectura, loguear pero no tronar la app
+          if (err.code === "SQLITE_READONLY") {
+            console.error("⚠️ SQLite en modo solo lectura, sesión no guardada:", userId);
+            // Resolver de todos modos para que el chat siga funcionando
+            return resolve();
+          }
+          return reject(err);
+        }
         resolve();
       }
     );
