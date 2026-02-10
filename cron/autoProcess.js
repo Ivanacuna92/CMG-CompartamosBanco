@@ -26,7 +26,7 @@ export function startAutoProcessing() {
     // 1) Traer conversaciones no procesadas
     const [rows] = await pool.query(`
       SELECT id, conversation, contract_number
-      FROM esac_conversations
+      FROM inbursa_conversations
       WHERE payment_agreement IS NULL
     `);
 
@@ -52,7 +52,7 @@ export function startAutoProcessing() {
 
         // 4) Actualizar la conversación
         await pool.query(
-          `UPDATE esac_conversations
+          `UPDATE inbursa_conversations
            SET payment_agreement = ?,
                estimated_recovery = ?
            WHERE id = ?`,
@@ -62,7 +62,7 @@ export function startAutoProcessing() {
         // 5) Marcar anteriores como renegociadas
         if (convo.contract_number) {
           await pool.query(
-            `UPDATE esac_conversations
+            `UPDATE inbursa_conversations
              SET payment_agreement = 2
              WHERE contract_number = ?
                AND id <> ?
