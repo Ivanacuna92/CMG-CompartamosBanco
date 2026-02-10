@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  esac-inbursa:
+    build: .
+    container_name: esac-inbursa
+    ports:
+      - "9666:9666"
+    environment:
+      - PORT=9666
+      - DEEPSEEK_API_KEY=sk-c7986c5c57dc4ea8a161cb06361d3b8d
+      - DB_HOST=datenbanken.aloia.dev
+      - DB_PORT=3306
+      - DB_NAME=aloiaEsacBotDB
+      - DB_USER=aloiaMariaDB
+      - DB_PASSWORD=aloiaMariaDB-17.59*2025!
+    restart: unless-stopped
