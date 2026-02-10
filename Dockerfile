@@ -14,8 +14,8 @@ RUN npm install
 # Copiar el resto del código
 COPY . .
 
-# Puerto (ajusta si usas otro)
-EXPOSE 3000
+# Puerto
+EXPOSE 9666
 
 # Comando para iniciar
 CMD ["npm", "start"]
