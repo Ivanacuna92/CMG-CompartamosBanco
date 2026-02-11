@@ -115,8 +115,13 @@ export async function getUserByValidation(method, contact, nombreNormalizado) {
   for (const idx of indices) {
     const row = allRows[idx];
     const nombreDB = normalizeText(String(row["NOMBRE"] || "").trim());
-    console.log(`   🔎 Comparando: "${nombreDB}" vs "${nombreNormalizado}" → ${nombreDB === nombreNormalizado}`);
-    if (nombreDB === nombreNormalizado) {
+
+    // Comparar por conjunto de palabras (sin importar orden)
+    const wordsDB = nombreDB.split(" ").filter(w => w).sort().join(" ");
+    const wordsUser = nombreNormalizado.split(" ").filter(w => w).sort().join(" ");
+
+    console.log(`   🔎 Comparando: "${nombreDB}" vs "${nombreNormalizado}" (palabras: "${wordsDB}" vs "${wordsUser}") → ${wordsDB === wordsUser}`);
+    if (wordsDB === wordsUser) {
       console.log("✅ [getUserByValidation] Usuario encontrado:", row["NOMBRE"]);
       return rowToRegistro(row);
     }

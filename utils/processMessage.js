@@ -133,7 +133,7 @@ export async function processMessage(session, userMessage) {
 
     session.contact = contactoNormalizado;
     session.phase = "esperando_nombre";
-    const askName = "Gracias. Ahora, por favor ingresa tu nombre completo.";
+    const askName = "Gracias. Ahora, por favor ingresa tu nombre completo tal como aparece en tu cuenta (iniciando por apellidos).";
     session.messages.push({ role: "assistant", content: askName });
     return askName;
   }
@@ -149,7 +149,7 @@ export async function processMessage(session, userMessage) {
 
     const registro = await getUserByValidation(session.method, session.contact, nombreNorm);
     if (!registro) {
-      const prompt = `El usuario escribió: "${userMessage}". No encontré un registro con esa información. Por favor, ingresa tu nombre completo como aparece en tu cuenta.`;
+      const prompt = `El usuario escribió: "${userMessage}". No encontré un registro con esa información. Por favor, ingresa tu nombre completo tal como aparece en tu cuenta (iniciando por apellidos). Ejemplo: PÉREZ LÓPEZ JUAN CARLOS.`;
       const iaResp = await callAIConversation(prompt, session.messages);
       session.messages.push({ role: "assistant", content: iaResp });
       return iaResp;
