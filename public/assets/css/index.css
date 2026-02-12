@@ -27,13 +27,13 @@ body {
   position: relative;
 }
 
-/* Header verde de Inbursa */
-.chat-header { 
-  background-color: #0B0958; 
-  padding: 20px; 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
+/* Header con gradiente */
+.chat-header {
+  background: linear-gradient(to right, #ffffff 40%, #0B0958 100%);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   z-index: 10;
 }
 
