@@ -114,7 +114,10 @@ Invítalo cordialmente a liquidar su adeudo. Si puede pagar el total, excelente.
 2. Parcialidades: hasta ${parcialidad_max} pagos
 3. Regularización: $${parseFloat(regulariza || 0).toFixed(2)} MXN
 
-El método de pago es ÚNICAMENTE por depósito vía SPEI a la CLABE ${clabe}.
+Los métodos de pago autorizados son:
+1. SPEI a la CLABE ${clabe}
+2. Sucursales Banco Inbursa (08:30 a 17:30 hrs) con la CLABE ${clabe}
+3. Módulos Inbursa en Walmart, Sam's Club, Bodega Aurrera y Sanborns (11:30 a 19:00 hrs) con la CLABE ${clabe}
 Tiene 3 horas a partir de este momento para realizar el pago.
 
 Solo responde con el mensaje final, sin encabezados ni comentarios adicionales.
