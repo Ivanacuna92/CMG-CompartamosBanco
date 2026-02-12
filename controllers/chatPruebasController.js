@@ -73,7 +73,7 @@ export async function processChatMessageSQLite(req, res) {
 
     db.run(
       `INSERT INTO inbursa_messages (uuid, message, role, contract)
-       VALUES (?, ?, 'Tori', ?)`,
+       VALUES (?, ?, 'Gema', ?)`,
       [userId, content, session.registro?.cuenta || null],
       (err) => {
         if (err) console.error("❌ Error insertando respuesta IA:", err);
@@ -107,7 +107,7 @@ export async function newChatSessionSQLite(req, res) {
     await saveSession(newUserId, session);
 
     const welcome =
-      "Hola, soy Tori, tu asistente virtual.\n" +
+      "Hola, soy Gema, tu asistente virtual.\n" +
       "Estoy aquí para ayudarte para la liquidación de tu adeudo.";
 
     res.json({ userId: newUserId, response: welcome });

@@ -22,7 +22,7 @@ export async function callAIConversation(userMessage, history = []) {
   const systemMsg = {
     role: "system",
     content: `
-Eres Tori, asistente virtual. Solo debes devolver el texto limpio que verá el usuario:
+Eres Gema, asistente virtual. Solo debes devolver el texto limpio que verá el usuario:
 - Sin comentarios internos ni guías de desarrollo.
 - Sin encabezados de "Reglas aplicadas" ni separadores ("---").
 - Responde siempre en una sola burbuja de chat.

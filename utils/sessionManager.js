@@ -68,13 +68,13 @@ sessionsDB.run(
   )`
 );
 
-// Genera un ID de usuario (formato FXTori-XXXXXXXX)
+// Genera un ID de usuario (formato FXGema-XXXXXXXX)
 export function generateUserId() {
   const randHex = Math.floor(Math.random() * 0xffffffff)
     .toString(16)
     .padStart(8, "0")
     .toUpperCase();
-  return `FXTori-${randHex}`;
+  return `FXGema-${randHex}`;
 }
 
 // Inicializa el estado de la conversación; se utiliza el prompt base (prompt.txt)

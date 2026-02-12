@@ -51,7 +51,7 @@ export async function processChatMessage(req, res) {
       : reply;
     await pool.execute(
       `INSERT INTO inbursa_messages (uuid, message, role, contract)
-       VALUES (?, ?, 'Tori', ?)`,
+       VALUES (?, ?, 'Gema', ?)`,
       [userId, content, session.registro?.cuenta || null]
     );
 
@@ -85,7 +85,7 @@ export async function newChatSession(req, res) {
 
     // Saludo inicial fijo
     const welcome =
-      "Hola, soy Tori, tu asistente virtual.\n" +
+      "Hola, soy Gema, tu asistente virtual.\n" +
       "Estoy aquí para ayudarte en lo que necesites";
 
     res.json({ userId: newUserId, response: welcome });
