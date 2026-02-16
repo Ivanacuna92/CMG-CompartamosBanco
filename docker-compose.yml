@@ -14,4 +14,9 @@ services:
       - DB_NAME=aloiaEsacBotDB
       - DB_USER=aloiaMariaDB
       - DB_PASSWORD=aloiaMariaDB-17.59*2025!
+      - DB_c_HOST=187.248.37.202
+      - DB_c_PORT=3306
+      - DB_c_NAME=esac
+      - DB_c_USER=Esac
+      - DB_c_PASSWORD=6768Pker/821.
     restart: unless-stopped
