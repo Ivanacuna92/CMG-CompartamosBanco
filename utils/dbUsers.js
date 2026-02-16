@@ -37,12 +37,12 @@ export async function checkContactExists(method, contact) {
       const phone = valor.replace(/\D/g, "");
       const params = Array(13).fill(phone);
       [rows] = await clientePool.query(
-        `SELECT 1 FROM cpi_cv WHERE ${PHONE_WHERE} LIMIT 1`,
+        `SELECT 1 FROM cpi_pv WHERE ${PHONE_WHERE} LIMIT 1`,
         params
       );
     } else {
       [rows] = await clientePool.query(
-        `SELECT 1 FROM cpi_cv WHERE CORREO = ? LIMIT 1`,
+        `SELECT 1 FROM cpi_pv WHERE CORREO = ? LIMIT 1`,
         [valor]
       );
     }
@@ -69,12 +69,12 @@ export async function getUserByValidation(method, contact, nombreNormalizado) {
       const phone = valor.replace(/\D/g, "");
       const params = Array(13).fill(phone);
       [rows] = await clientePool.query(
-        `SELECT * FROM cpi_cv WHERE ${PHONE_WHERE}`,
+        `SELECT * FROM cpi_pv WHERE ${PHONE_WHERE}`,
         params
       );
     } else {
       [rows] = await clientePool.query(
-        `SELECT * FROM cpi_cv WHERE CORREO = ?`,
+        `SELECT * FROM cpi_pv WHERE CORREO = ?`,
         [valor]
       );
     }
@@ -109,7 +109,7 @@ export async function getUserByValidation(method, contact, nombreNormalizado) {
 export async function getUserByCredito(credito) {
   try {
     const [rows] = await clientePool.query(
-      `SELECT * FROM cpi_cv WHERE CREDITO = ? LIMIT 1`,
+      `SELECT * FROM cpi_pv WHERE CREDITO = ? LIMIT 1`,
       [String(credito).trim()]
     );
     return rows.length > 0 ? rowToRegistro(rows[0]) : null;
