@@ -23,7 +23,29 @@ export function startAutoProcessing() {
   cron.schedule("0 3 * * *", async () => {
     console.log("🔄 Procesando conversaciones a las 03:00am…");
 
-    // 1) Traer conversaciones no procesadas
+    // 1) Consolidar mensajes de inbursa_messages → inbursa_conversations
+    const [groups] = await pool.query(`
+      SELECT uuid,
+             MAX(contract) AS contract_number,
+             GROUP_CONCAT(CONCAT(role, ': ', message) ORDER BY created_at SEPARATOR '\\n') AS conversation,
+             COUNT(*) AS total_interactions,
+             MAX(created_at) AS last_update
+      FROM inbursa_messages
+      WHERE uuid NOT IN (SELECT uuid FROM inbursa_conversations)
+      GROUP BY uuid
+    `);
+
+    for (const g of groups) {
+      const interactionsOverTwo = g.total_interactions > 2 ? 1 : 0;
+      await pool.query(
+        `INSERT INTO inbursa_conversations (uuid, contract_number, conversation, total_interactions, interactions_over_two, last_update)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [g.uuid, g.contract_number, g.conversation, g.total_interactions, interactionsOverTwo, g.last_update]
+      );
+      console.log(`📦 Consolidada UUID ${g.uuid} → contrato=${g.contract_number || 'NULL'}, msgs=${g.total_interactions}`);
+    }
+
+    // 2) Traer conversaciones no procesadas
     const [rows] = await pool.query(`
       SELECT id, conversation, contract_number
       FROM inbursa_conversations
@@ -32,7 +54,7 @@ export function startAutoProcessing() {
 
     for (const convo of rows) {
       try {
-        // 2) Obtener acuerdo desde IA
+        // 3) Obtener acuerdo desde IA
         const resp = await openai.chat.completions.create({
           model: "deepseek-chat",
           messages: [
@@ -43,14 +65,14 @@ export function startAutoProcessing() {
         const answer = resp.choices[0].message.content.trim();
         const agreement = answer === "1" ? 1 : 0;
 
-        // 3) Recuperar monto si hay acuerdo
+        // 4) Recuperar monto si hay acuerdo
         let estimated = 0.00;
         if (agreement === 1 && convo.contract_number) {
           const user = await getUserByCredito(convo.contract_number);
           estimated = user ? parseFloat(user.total || 0) : 0.00;
         }
 
-        // 4) Actualizar la conversación
+        // 5) Actualizar la conversación
         await pool.query(
           `UPDATE inbursa_conversations
            SET payment_agreement = ?,
@@ -59,7 +81,7 @@ export function startAutoProcessing() {
           [agreement, estimated, convo.id]
         );
 
-        // 5) Marcar anteriores como renegociadas
+        // 6) Marcar anteriores como renegociadas
         if (convo.contract_number) {
           await pool.query(
             `UPDATE inbursa_conversations
