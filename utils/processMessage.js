@@ -1,6 +1,9 @@
 // utils/processMessage.js
-import { callAIConversation, generateUserSummary } from "./openaiClient.js";
+import { callAIConversation } from "./openaiClient.js";
 import { getUserByValidation, checkContactExists } from "./dbUsers.js";
+import { processNegotiationStep, initNegotiation } from "./negotiationEngine.js";
+import { getTemplate } from "./negotiationTemplates.js";
+import { S } from "./negotiationStates.js";
 
 /**
  * Normaliza texto: elimina acentos, múltiples espacios y convierte a mayúsculas
@@ -155,12 +158,31 @@ export async function processMessage(session, userMessage) {
       return iaResp;
     }
 
+    // Usuario validado: iniciar escalera de negociación
     session.registro = registro;
-    session.phase = "conversacion_general";
+    session.phase = "negociacion";
+    session.negotiation = initNegotiation(registro);
 
-    const summary = await generateUserSummary(registro);
-    session.messages.push({ role: "assistant", content: summary });
-    return summary;
+    console.log("📋 Datos del cliente:\n" +
+      `- nombre: ${registro.nombre}\n` +
+      `- cuenta/crédito: ${registro.cuenta}\n` +
+      `- total: $${parseFloat(registro.total || 0).toFixed(2)} MXN\n` +
+      `- clabe: ${registro.clabe}\n` +
+      `- día de pago: ${registro.dia_pago}\n` +
+      `- regulariza: $${parseFloat(registro.regulariza || 0).toFixed(2)} MXN\n` +
+      `- quita máx: $${parseFloat(registro.quita_max || 0).toFixed(2)} MXN\n` +
+      `- mensualidad: $${parseFloat(registro.mensualidad || 0).toFixed(2)} MXN\n` +
+      `- mora: ${registro.mora}`
+    );
+
+    // Saludo inicial + primera oferta de la escalera
+    const saludo = `Hola ${registro.nombre}, espero que te encuentres bien. ` +
+      `Te contacto respecto a tu crédito personal Inbursa *${registro.cuenta}*.\n\n`;
+    const primeraOferta = getTemplate(session.negotiation.state, registro);
+    const reply = saludo + primeraOferta;
+
+    session.messages.push({ role: "assistant", content: reply });
+    return reply;
   }
 
   // Bloqueo no titular
@@ -170,17 +192,48 @@ export async function processMessage(session, userMessage) {
     return msg;
   }
 
-  // Detectar no titular en conversación general
-  if (session.phase === "conversacion_general" && detectarNoTitular(txtLower)) {
-    const msg = "Entendemos tu situación, sin embargo por políticas de protección de datos solo podemos proporcionar información y gestionar la cuenta directamente con el titular. Te sugerimos que el titular se comunique con nosotros para poder ayudarle.";
-    session.registro = null;
-    session.phase = "bloqueado_no_titular";
-    session.messages.push({ role: "assistant", content: msg });
-    return msg;
+  // 5) negociacion: Escalera de Negociación CPI-IA
+  if (session.phase === "negociacion") {
+    // Detectar no titular en cualquier momento
+    if (detectarNoTitular(txtLower)) {
+      const msg = "Entendemos tu situación, sin embargo por políticas de protección de datos solo podemos proporcionar información y gestionar la cuenta directamente con el titular. Te sugerimos que el titular se comunique con nosotros para poder ayudarle.";
+      session.registro = null;
+      session.negotiation = null;
+      session.phase = "bloqueado_no_titular";
+      session.messages.push({ role: "assistant", content: msg });
+      return msg;
+    }
+
+    const reply = await processNegotiationStep(session, userMessage);
+    session.messages.push({ role: "assistant", content: reply });
+
+    // Si llegó a estado terminal, cambiar fase
+    if (session.negotiation.state === S.COMPLETED || session.negotiation.state === S.FINAL_REFERRAL) {
+      session.phase = "negociacion_terminada";
+    }
+
+    return reply;
   }
 
-  // 5) conversacion_general: IA con contexto del registro
-  const normalReply = await callAIConversation(userMessage, session.messages);
-  session.messages.push({ role: "assistant", content: normalReply });
-  return normalReply;
+  // 6) negociacion_terminada: post-negociación
+  if (session.phase === "negociacion_terminada") {
+    // Si el usuario quiere reconsiderar después del FINAL_REFERRAL
+    const quiereReconiderar = /si|quiero|acepto|pagar|reconsidera|dale|va|ok/i.test(txtLower);
+    if (quiereReconiderar && session.registro) {
+      session.phase = "negociacion";
+      session.negotiation = initNegotiation(session.registro);
+      const reply = getTemplate(session.negotiation.state, session.registro);
+      session.messages.push({ role: "assistant", content: reply });
+      return reply;
+    }
+
+    const reply = getTemplate(S.COMPLETED, session.registro || { nombre: "" });
+    session.messages.push({ role: "assistant", content: reply });
+    return reply;
+  }
+
+  // Fallback: si por alguna razón no se detectó la fase
+  const fallbackReply = await callAIConversation(userMessage, session.messages);
+  session.messages.push({ role: "assistant", content: fallbackReply });
+  return fallbackReply;
 }

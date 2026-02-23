@@ -81,8 +81,9 @@ export function generateUserId() {
 export function initConversation() {
   const promptBase = readFileSync("prompt.txt", "utf-8");
   return {
-    phase: "inicio", // Fases: inicio, conversacion_general, esperando_validacion, datos_validos
+    phase: "inicio", // Fases: inicio, esperando_metodo, esperando_contacto, esperando_nombre, negociacion, negociacion_terminada
     registro: null,
+    negotiation: null, // Se inicializa al entrar en fase de negociación
     messages: [
       { role: "system", content: promptBase }
     ],

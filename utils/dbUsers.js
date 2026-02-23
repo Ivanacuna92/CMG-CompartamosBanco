@@ -21,6 +21,8 @@ function rowToRegistro(row) {
     parcialidad_max: parseInt(row["PARCIALID MAX"]) || 0,
     regulariza:      parseFloat(row.REGULARIZA) || 0,
     quita_max:       parseFloat(row["QUITA MAX"]) || 0,
+    mensualidad:     parseFloat(row.MENSUALIDAD) || 0,
+    mora:            String(row.MORA || "").trim(),
   };
 }
 
