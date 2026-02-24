@@ -272,8 +272,8 @@ function handleDateScheduling(neg, registro, extractedDate, currentState) {
     );
   }
 
-  // Validar fecha (máximo 3 días hábiles para dar margen a los "2 días" del PDF)
-  const validation = isValidPaymentDate(extractedDate, registro.dia_pago, 3);
+  // Validar fecha (máximo 2 días hábiles, consistente con lo comunicado al cliente)
+  const validation = isValidPaymentDate(extractedDate, registro.dia_pago, 2);
   if (!validation.valid) {
     return (
       `Esa fecha no es válida: ${validation.reason}. ` +

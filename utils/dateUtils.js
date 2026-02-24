@@ -79,7 +79,7 @@ export function formatDateES(date) {
  * @param {number} maxBusinessDays - Máximo de días hábiles permitidos (default 2)
  * @returns {{ valid: boolean, reason?: string }}
  */
-export function isValidPaymentDate(dateStr, diaPago, maxBusinessDays = 3) {
+export function isValidPaymentDate(dateStr, diaPago, maxBusinessDays = 2) {
   const proposed = new Date(dateStr + "T12:00:00");
   const today = getTodayMX();
   today.setHours(0, 0, 0, 0);
