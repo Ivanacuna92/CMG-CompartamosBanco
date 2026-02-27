@@ -100,9 +100,17 @@ export function isValidPaymentDate(dateStr, diaPago, maxBusinessDays = 2) {
     };
   }
 
-  // Verificar que no rebase el día de pago del mes en curso
+  // Verificar que la fecha sea del mes en curso
+  if (proposed.getMonth() !== today.getMonth() || proposed.getFullYear() !== today.getFullYear()) {
+    return {
+      valid: false,
+      reason: "el pago debe realizarse dentro del mes en curso",
+    };
+  }
+
+  // Verificar que no rebase el día de pago del mes
   const diaPagoNum = parseInt(diaPago);
-  if (diaPagoNum && proposed.getDate() > diaPagoNum && proposed.getMonth() === today.getMonth()) {
+  if (diaPagoNum && proposed.getDate() > diaPagoNum) {
     return {
       valid: false,
       reason: `el pago debe realizarse antes del día ${diaPago} del mes`,
