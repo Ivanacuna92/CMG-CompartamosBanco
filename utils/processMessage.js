@@ -109,18 +109,16 @@ export async function processMessage(session, userMessage) {
 
     if (session.method === "telefono") {
       if (!telefonoRegex.test(userMessage.trim())) {
-        const prompt = `El usuario ingresó: "${userMessage}". Recuerda que tu número de teléfono debe tener 10 dígitos.`;
-        const iaResp = await callAIConversation(prompt, session.messages);
-        session.messages.push({ role: "assistant", content: iaResp });
-        return iaResp;
+        const errorMsg = "El número de teléfono debe ser de exactamente 10 dígitos. Por favor, ingrésalo nuevamente.";
+        session.messages.push({ role: "assistant", content: errorMsg });
+        return errorMsg;
       }
       contactoNormalizado = userMessage.trim();
     } else {
       if (!correoRegex.test(userMessage.trim())) {
-        const prompt = `El usuario ingresó: "${userMessage}". Recuerda que necesitamos un correo electrónico válido.`;
-        const iaResp = await callAIConversation(prompt, session.messages);
-        session.messages.push({ role: "assistant", content: iaResp });
-        return iaResp;
+        const errorMsg = "El correo electrónico no es válido. Por favor, ingrésalo nuevamente.";
+        session.messages.push({ role: "assistant", content: errorMsg });
+        return errorMsg;
       }
       contactoNormalizado = userMessage.trim().toLowerCase();
     }
@@ -152,10 +150,9 @@ export async function processMessage(session, userMessage) {
 
     const registro = await getUserByValidation(session.method, session.contact, nombreNorm);
     if (!registro) {
-      const prompt = `El usuario escribió: "${userMessage}". No encontré un registro con esa información. Por favor, ingresa tu nombre completo tal como aparece en tu cuenta (iniciando por apellidos). Ejemplo: PÉREZ LÓPEZ JUAN CARLOS.`;
-      const iaResp = await callAIConversation(prompt, session.messages);
-      session.messages.push({ role: "assistant", content: iaResp });
-      return iaResp;
+      const errorMsg = "El nombre no coincide con nuestros registros. Por favor, ingresa tu nombre completo tal como aparece en tu cuenta (iniciando por apellidos).";
+      session.messages.push({ role: "assistant", content: errorMsg });
+      return errorMsg;
     }
 
     // Usuario validado: iniciar escalera de negociación
