@@ -218,7 +218,7 @@ export async function processMessage(session, userMessage) {
   // 6) negociacion_terminada: post-negociación
   if (session.phase === "negociacion_terminada") {
     // Si el usuario quiere reconsiderar después del FINAL_REFERRAL
-    const quiereReconiderar = /si|quiero|acepto|pagar|reconsidera|dale|va|ok/i.test(txtLower);
+    const quiereReconiderar = /\b(si|sí|quiero|acepto|pagar|reconsidera|dale|va|ok)\b/i.test(txtLower);
     if (quiereReconiderar && session.registro) {
       session.phase = "negociacion";
       session.negotiation = initNegotiation(session.registro);

@@ -204,7 +204,7 @@ Formato de respuesta obligatorio (JSON puro, sin backticks):
   } catch (error) {
     console.error("❌ [classifyUserIntent] Error:", error.message);
     return {
-      intent: "question",
+      intent: "objection",
       confidence: 0.3,
       extracted_date: null,
       summary: "No se pudo clasificar",

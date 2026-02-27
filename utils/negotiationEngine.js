@@ -195,7 +195,8 @@ export async function processNegotiationStep(session, userMessage) {
   });
 
   // 3. Manejo global: "ya pagué" desde cualquier estado
-  if (intent === "already_paid") {
+  //    EXCEPTO awaiting_confirmation, donde la tabla de transiciones lo lleva a COMPLETED
+  if (intent === "already_paid" && currentState !== S.AWAITING_CONFIRMATION) {
     neg.state = S.AWAITING_CONFIRMATION;
     return getTemplate(S.AWAITING_CONFIRMATION, registro);
   }
@@ -207,7 +208,25 @@ export async function processNegotiationStep(session, userMessage) {
   }
 
   // 5. Manejo de preguntas: IA responde + re-presenta oferta
+  //    Si el usuario lleva 2+ "question" seguidas en el mismo estado, tratar como objection
+  //    para evitar loops infinitos donde el clasificador no detecta la intención correcta.
   if (intent === "question") {
+    const recentQuestions = neg.history.filter(
+      (h) => h.state === currentState && h.intent === "question"
+    );
+    if (recentQuestions.length >= 2) {
+      console.log(`⚠️ [negotiationEngine] ${recentQuestions.length} questions seguidas en ${currentState}, tratando como objection`);
+      // Caer al flujo normal de transiciones con intent "objection"
+      const stateTransitions = TRANSITIONS[currentState];
+      const fallbackState = stateTransitions?.["objection"] || stateTransitions?.["reject"];
+      if (fallbackState) {
+        const nextState = applySkipLogic(fallbackState, registro);
+        neg.state = nextState;
+        neg.lastTransition = Date.now();
+        return getTemplate(nextState, registro);
+      }
+    }
+
     const answer = await generateContextualAnswer(userMessage, currentState, registro);
     const currentOffer = getTemplate(currentState, registro);
     return `${answer}\n\nRetomando: ${currentOffer}`;
@@ -223,8 +242,9 @@ export async function processNegotiationStep(session, userMessage) {
   const stateTransitions = TRANSITIONS[currentState];
   if (!stateTransitions) {
     console.warn(`⚠️ [negotiationEngine] Estado sin transiciones: ${currentState}`);
-    neg.state = S.P1_OFFER_REGULARIZA;
-    return getTemplate(S.P1_OFFER_REGULARIZA, registro);
+    const safeState = getInitialState(registro);
+    neg.state = safeState;
+    return getTemplate(safeState, registro);
   }
 
   let nextState = stateTransitions[intent];

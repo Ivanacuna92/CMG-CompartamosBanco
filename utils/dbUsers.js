@@ -17,10 +17,10 @@ function rowToRegistro(row) {
     cuenta:          String(row.CREDITO || "").trim(),
     total:           parseFloat(row.TOTAL) || 0,
     clabe:           String(row.CLABE || "").trim(),
-    dia_pago:        String(row["DIA PAGO"] || "").trim(),
-    parcialidad_max: parseInt(row["PARCIALID MAX"]) || 0,
+    dia_pago:        String(row.DIA_PAGO || "").trim(),
+    parcialidad_max: parseInt(row.PARCIALID_MAX) || 0,
     regulariza:      parseFloat(row.REGULARIZA) || 0,
-    quita_max:       parseFloat(row["QUITA MAX"]) || 0,
+    quita_max:       parseFloat(row.QUITA_MAX) || 0,
     mensualidad:     parseFloat(row.MENSUALIDAD) || 0,
     mora:            String(row.MORA || "").trim(),
   };

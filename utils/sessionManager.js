@@ -1,6 +1,6 @@
 // utils/sessionManager.js
 import sqlite3 from "sqlite3";
-import { readFileSync, existsSync, accessSync, constants, unlinkSync } from "fs";
+import { existsSync, accessSync, constants, unlinkSync } from "fs";
 import path from "path";
 
 // Determinar la ruta de la base de datos
@@ -77,16 +77,13 @@ export function generateUserId() {
   return `FXGema-${randHex}`;
 }
 
-// Inicializa el estado de la conversación; se utiliza el prompt base (prompt.txt)
+// Inicializa el estado de la conversación
 export function initConversation() {
-  const promptBase = readFileSync("prompt.txt", "utf-8");
   return {
     phase: "inicio", // Fases: inicio, esperando_metodo, esperando_contacto, esperando_nombre, negociacion, negociacion_terminada
     registro: null,
     negotiation: null, // Se inicializa al entrar en fase de negociación
-    messages: [
-      { role: "system", content: promptBase }
-    ],
+    messages: [],
   };
 }
 
