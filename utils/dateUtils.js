@@ -109,15 +109,16 @@ export function isValidPaymentDate(dateStr, diaPago, maxBusinessDays = 2) {
     };
   }
 
-  // Verificar que esté dentro del plazo de días hábiles
+  // Verificar que esté dentro del plazo de días hábiles (sin contar hoy)
   let businessDayCount = 0;
   const check = new Date(today);
   check.setHours(12, 0, 0, 0);
+  check.setDate(check.getDate() + 1); // empezar desde mañana
   while (check <= proposed) {
     if (isBusinessDay(check)) businessDayCount++;
     check.setDate(check.getDate() + 1);
   }
-  if (businessDayCount > maxBusinessDays + 1) {
+  if (businessDayCount > maxBusinessDays) {
     return {
       valid: false,
       reason: `el plazo máximo es de ${maxBusinessDays} días hábiles`,
