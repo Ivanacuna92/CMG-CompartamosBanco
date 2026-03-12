@@ -21,16 +21,12 @@ import {
 // ============================================================
 const TRANSITIONS = {
   // --- Prioridad 1: Regularización ---
+  // Oferta → reject → ofrece días/parcialidades → reject → baja a P2
   [S.P1_OFFER_REGULARIZA]: {
-    accept:    S.PAYMENT_INSTRUCTIONS,
-    reject:    S.P1_INSIST,
-    objection: S.P1_INSIST,
-  },
-  [S.P1_INSIST]: {
-    accept:        S.P1_OFFER_DAYS,
-    reject:        S.P1_OFFER_INSTALLMENTS,
-    objection:     S.P1_OFFER_INSTALLMENTS,
-    schedule_date: S.P1_OFFER_DAYS,
+    accept:        S.PAYMENT_INSTRUCTIONS,
+    schedule_date: "_handle_date",
+    reject:        S.P1_OFFER_DAYS,
+    objection:     S.P1_OFFER_DAYS,
   },
   [S.P1_OFFER_DAYS]: {
     schedule_date: S.P1_SCHEDULE_DATE,
@@ -53,15 +49,17 @@ const TRANSITIONS = {
   [S.P1_INSTALLMENT_CHOICE]: {
     installment_weekly:  "_handle_installment",
     installment_biweekly: "_handle_installment",
-    accept:              S.P1_INSTALLMENT_CHOICE, // re-preguntar
+    accept:              S.P1_INSTALLMENT_CHOICE,
     reject:              S.P2_OFFER_QUITA,
   },
 
   // --- Prioridad 2: Liquidación con Quita ---
+  // Oferta → reject → parcialidades → reject → negativa → reject → baja a P3
   [S.P2_OFFER_QUITA]: {
-    accept:    S.P2_PAYMENT_DOCS,
-    reject:    S.P2_OFFER_INSTALLMENTS,
-    objection: S.P2_OFFER_INSTALLMENTS,
+    accept:        S.P2_PAYMENT_DOCS,
+    schedule_date: "_handle_date",
+    reject:        S.P2_OFFER_INSTALLMENTS,
+    objection:     S.P2_OFFER_INSTALLMENTS,
   },
   [S.P2_OFFER_INSTALLMENTS]: {
     accept:              S.P2_INSTALLMENT_CHOICE,
@@ -83,10 +81,12 @@ const TRANSITIONS = {
   },
 
   // --- Prioridad 3: Intención (Mensualidad) ---
+  // Oferta → reject → ofrece días → reject → referencia final
   [S.P3_OFFER_MENSUALIDAD]: {
-    accept:    S.PAYMENT_INSTRUCTIONS,
-    reject:    S.P3_OFFER_DAYS,
-    objection: S.P3_OFFER_DAYS,
+    accept:        S.PAYMENT_INSTRUCTIONS,
+    schedule_date: "_handle_date",
+    reject:        S.P3_OFFER_DAYS,
+    objection:     S.P3_OFFER_DAYS,
   },
   [S.P3_OFFER_DAYS]: {
     accept:        S.P3_SCHEDULE_DATE,
@@ -110,6 +110,8 @@ const TRANSITIONS = {
     accept:       S.AWAITING_CONFIRMATION,
     already_paid: S.AWAITING_CONFIRMATION,
     greeting:     S.AWAITING_CONFIRMATION,
+    reject:       S.P2_OFFER_INSTALLMENTS,
+    objection:    S.P2_OFFER_INSTALLMENTS,
   },
   [S.AWAITING_CONFIRMATION]: {
     already_paid: S.COMPLETED,
@@ -207,6 +209,33 @@ export async function processNegotiationStep(session, userMessage) {
     return getTemplate(S.COMPLETED, registro);
   }
 
+  // 4.5. Pending installment plan - cliente eligiendo fecha de primer pago
+  if (neg.pendingInstallment) {
+    if (intent === "accept" || intent === "schedule_date") {
+      return handleInstallmentDateSelection(neg, registro, extracted_date, currentState);
+    }
+    if (intent === "reject" || intent === "objection") {
+      neg.pendingInstallment = null;
+      // Continuar con flujo normal de transiciones (escalar al siguiente nivel)
+    }
+  }
+
+  // 4.6. PAYMENT_INSTRUCTIONS: si el cliente se arrepiente, regresar a opciones según prioridad de origen
+  if (currentState === S.PAYMENT_INSTRUCTIONS && (intent === "reject" || intent === "objection")) {
+    let fallback;
+    if (neg.sourcePriority === "p1") {
+      fallback = S.P1_OFFER_INSTALLMENTS;
+    } else if (neg.sourcePriority === "p3") {
+      fallback = S.P3_OFFER_DAYS;
+    } else {
+      fallback = S.FINAL_REFERRAL;
+    }
+    fallback = applySkipLogic(fallback, registro);
+    neg.state = fallback;
+    neg.lastTransition = Date.now();
+    return getTemplate(fallback, registro);
+  }
+
   // 5. Manejo de preguntas: IA responde + re-presenta oferta
   //    Si el usuario lleva 2+ "question" seguidas en el mismo estado, tratar como objection
   //    para evitar loops infinitos donde el clasificador no detecta la intención correcta.
@@ -274,6 +303,11 @@ export async function processNegotiationStep(session, userMessage) {
   neg.state = nextState;
   neg.lastTransition = Date.now();
 
+  // Guardar prioridad de origen al entrar a PAYMENT_INSTRUCTIONS
+  if (nextState === S.PAYMENT_INSTRUCTIONS) {
+    neg.sourcePriority = currentState.startsWith("p1_") ? "p1" : currentState.startsWith("p3_") ? "p3" : null;
+  }
+
   console.log(`📍 [negotiationEngine] ${currentState} → ${nextState} (intent: ${intent})`);
 
   return getTemplate(nextState, registro);
@@ -311,6 +345,7 @@ function handleDateScheduling(neg, registro, extractedDate, currentState) {
   } else {
     neg.state = S.PAYMENT_INSTRUCTIONS;
   }
+  neg.sourcePriority = currentState.startsWith("p1_") ? "p1" : currentState.startsWith("p3_") ? "p3" : null;
   neg.lastTransition = Date.now();
 
   return formatScheduledPaymentMessage(
@@ -326,16 +361,53 @@ function handleDateScheduling(neg, registro, extractedDate, currentState) {
  */
 function handleInstallmentSelection(neg, registro, planType, currentState) {
   const amount = resolveCurrentAmount(currentState, registro);
-  const today = getTodayMX();
-  const schedule = calculateInstallmentDates(amount, planType, today, registro.dia_pago);
+  neg.pendingInstallment = planType;
+
+  const planLabel =
+    planType === "weekly"
+      ? "semanal (3 pagos cada 7 días)"
+      : "quincenal (2 pagos cada 10 días)";
+
+  return (
+    `Perfecto, elegiste el plan *${planLabel}* por un total de ` +
+    `*$${formatMoney(amount)} MXN*.\n\n` +
+    `¿En qué fecha deseas realizar tu primer pago? Puede ser el día de hoy o ` +
+    `dentro de los próximos *2 días hábiles*.`
+  );
+}
+
+/**
+ * Maneja la selección de fecha para un plan de parcialidades pendiente
+ */
+function handleInstallmentDateSelection(neg, registro, extractedDate, currentState) {
+  const planType = neg.pendingInstallment;
+  const amount = resolveCurrentAmount(currentState, registro);
+
+  // Si no se extrajo fecha (ej: "sí" / "hoy"), usar hoy
+  let startDate;
+  if (!extractedDate) {
+    startDate = getTodayMX();
+  } else {
+    const validation = isValidPaymentDate(extractedDate, registro.dia_pago, 2);
+    if (!validation.valid) {
+      return (
+        `Esa fecha no es válida: ${validation.reason}. ` +
+        `Por favor indica otra fecha (día hábil, máximo 2 días hábiles).`
+      );
+    }
+    startDate = new Date(extractedDate + "T12:00:00");
+  }
+
+  const schedule = calculateInstallmentDates(amount, planType, startDate, registro.dia_pago);
 
   neg.installmentPlan = { planType, schedule };
+  neg.pendingInstallment = null;
 
-  // Determinar estado destino según prioridad
   if (currentState.startsWith("p2_")) {
     neg.state = S.P2_PAYMENT_DOCS;
   } else {
     neg.state = S.PAYMENT_INSTRUCTIONS;
+    neg.sourcePriority = currentState.startsWith("p1_") ? "p1" : currentState.startsWith("p3_") ? "p3" : null;
   }
   neg.lastTransition = Date.now();
 

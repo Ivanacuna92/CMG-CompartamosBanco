@@ -85,8 +85,9 @@ export function getTemplate(state, registro, extra = {}) {
       `podemos dar *hasta 2 días* para reunirlo. ¿De esta forma te será posible?`,
 
     [S.P1_OFFER_DAYS]:
-      `Perfecto. Recuerda que el pago de *$${regularizaFmt} MXN* debe realizarse en día hábil ` +
-      `y no puede pasar del día *${dia_pago}* de este mes. ¿En qué fecha realizarías el pago?`,
+      `Entiendo tu situación. Te podemos dar *hasta 2 días hábiles* para reunir el monto de ` +
+      `*$${regularizaFmt} MXN*. ¿En qué fecha podrías realizar el pago? ` +
+      `(debe ser día hábil, antes del día *${dia_pago}* del mes).`,
 
     [S.P1_SCHEDULE_DATE]:
       `Necesito que me confirmes la fecha exacta en que realizarás tu pago de ` +
@@ -203,7 +204,7 @@ export function formatInstallmentMessage(schedule, cuenta, clabe) {
     `Los pagos los debes de realizar directamente en las sucursales o módulos de Banco Inbursa ` +
     `a los 10 dígitos de tu número de crédito *${cuenta}* o a través de cualquier banca ` +
     `móvil como pago SPEI a la cuenta CLABE *${clabe}*.\n\n` +
-    `Para iniciar con este beneficio debes de aplicar el primer pago de inmediato. Al aplicarlo y ` +
+    `Recuerda realizar tu primer pago en la fecha indicada. Al aplicarlo y ` +
     `reportarlo en 1 día hábil se generará tu convenio para que mantengas seguimiento al proceso.\n\n` +
     `Importante reportar tu comprobante de pago al teléfono *5635519617* para evitar penalizaciones ` +
     `y detener inmediatamente actos de cobranza.`
