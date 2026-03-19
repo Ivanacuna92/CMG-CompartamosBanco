@@ -145,6 +145,19 @@ function resolveCurrentAmount(state, registro) {
 }
 
 /**
+ * Retorna el monto efectivo: si el cliente ofreció pagar más en P2/P3, usa ese monto
+ */
+function getEffectiveAmount(neg, state, registro) {
+  if (neg.agreedAmount && neg.agreedPriority) {
+    const currentPriority = state.startsWith("p2_") ? "p2" : state.startsWith("p3_") ? "p3" : null;
+    if (currentPriority && currentPriority === neg.agreedPriority) {
+      return neg.agreedAmount;
+    }
+  }
+  return resolveCurrentAmount(state, registro);
+}
+
+/**
  * Aplica lógica de skip: si el siguiente estado no tiene datos, salta al siguiente nivel
  */
 function applySkipLogic(nextState, registro) {
@@ -185,7 +198,26 @@ export async function processNegotiationStep(session, userMessage) {
 
   // 1. Clasificar intención del usuario
   const classification = await classifyUserIntent(userMessage, currentState, registro);
-  const { intent, extracted_date, confidence } = classification;
+  let { intent, extracted_date, confidence } = classification;
+  const extracted_amount = classification.extracted_amount || 0;
+
+  // Monto mayor: para P2/P3, si el cliente ofrece más del monto ofrecido, aceptar el monto mayor
+  // Para P1 (Regularización) y Totalidad NO aplica esta regla
+  let justAgreedHigher = false;
+  if (extracted_amount > 0 && (currentState.startsWith("p2_") || currentState.startsWith("p3_"))) {
+    const currentAmount = resolveCurrentAmount(currentState, registro);
+    if (extracted_amount >= currentAmount) {
+      if (extracted_amount > currentAmount) {
+        neg.agreedAmount = extracted_amount;
+        neg.agreedPriority = currentState.startsWith("p2_") ? "p2" : "p3";
+        justAgreedHigher = true;
+        console.log(`💰 [negotiationEngine] Cliente ofrece más: $${extracted_amount} vs oferta $${currentAmount}`);
+      }
+      if (intent !== "schedule_date") {
+        intent = "accept";
+      }
+    }
+  }
 
   // 2. Registrar en historial
   neg.history.push({
@@ -310,7 +342,11 @@ export async function processNegotiationStep(session, userMessage) {
 
   console.log(`📍 [negotiationEngine] ${currentState} → ${nextState} (intent: ${intent})`);
 
-  return getTemplate(nextState, registro);
+  let response = getTemplate(nextState, registro);
+  if (justAgreedHigher) {
+    response = `Tu convenio queda por *$${formatMoney(neg.agreedAmount)} MXN*.\n\n${response}`;
+  }
+  return response;
 }
 
 /**
@@ -319,7 +355,7 @@ export async function processNegotiationStep(session, userMessage) {
 function handleDateScheduling(neg, registro, extractedDate, currentState) {
   if (!extractedDate) {
     // No se pudo extraer fecha, pedir de nuevo
-    const amount = resolveCurrentAmount(currentState, registro);
+    const amount = getEffectiveAmount(neg, currentState, registro);
     return (
       `Necesito que me indiques la fecha exacta en que realizarás tu pago de ` +
       `*$${formatMoney(amount)} MXN* (debe ser día hábil del mes en curso).`
@@ -337,7 +373,7 @@ function handleDateScheduling(neg, registro, extractedDate, currentState) {
 
   // Fecha válida: guardar y mostrar instrucciones
   neg.scheduledDate = extractedDate;
-  const amount = resolveCurrentAmount(currentState, registro);
+  const amount = getEffectiveAmount(neg, currentState, registro);
 
   // Determinar estado destino según prioridad
   if (currentState.startsWith("p2_")) {
@@ -360,7 +396,7 @@ function handleDateScheduling(neg, registro, extractedDate, currentState) {
  * Maneja la selección de plan de parcialidades
  */
 function handleInstallmentSelection(neg, registro, planType, currentState) {
-  const amount = resolveCurrentAmount(currentState, registro);
+  const amount = getEffectiveAmount(neg, currentState, registro);
   neg.pendingInstallment = planType;
 
   const planLabel =
@@ -381,7 +417,7 @@ function handleInstallmentSelection(neg, registro, planType, currentState) {
  */
 function handleInstallmentDateSelection(neg, registro, extractedDate, currentState) {
   const planType = neg.pendingInstallment;
-  const amount = resolveCurrentAmount(currentState, registro);
+  const amount = getEffectiveAmount(neg, currentState, registro);
 
   // Si no se extrajo fecha (ej: "sí" / "hoy"), usar hoy
   let startDate;

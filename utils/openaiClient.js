@@ -173,8 +173,10 @@ Categorías disponibles:
 
 Si el usuario menciona una fecha, extráela en formato YYYY-MM-DD. Si dice "mañana", calcula la fecha a partir de hoy (${fechaActual}). Si dice "el viernes", calcula el próximo viernes. Si dice "el 28", usa el día 28 del mes en curso.
 
+Si el usuario menciona un monto de dinero (ej: "tengo 7000", "puedo pagar $5,000", "dispongo de 3 mil", "junto 10000 pesos"), extrae el valor numérico en el campo "extracted_amount". Ejemplos: "tengo 7000" → 7000, "$5,000" → 5000, "tres mil" → 3000. Si no menciona monto, usa null.
+
 Formato de respuesta obligatorio (JSON puro, sin backticks):
-{"intent": "<categoría>", "confidence": <0.0-1.0>, "extracted_date": "<YYYY-MM-DD o null>", "summary": "<resumen breve en español>"}`;
+{"intent": "<categoría>", "confidence": <0.0-1.0>, "extracted_date": "<YYYY-MM-DD o null>", "extracted_amount": <número o null>, "summary": "<resumen breve en español>"}`;
 
   try {
     const response = await openai.chat.completions.create({
@@ -199,6 +201,7 @@ Formato de respuesta obligatorio (JSON puro, sin backticks):
       intent: parsed.intent || "question",
       confidence: parsed.confidence || 0.5,
       extracted_date: parsed.extracted_date || null,
+      extracted_amount: parsed.extracted_amount || 0,
       summary: parsed.summary || "",
     };
   } catch (error) {
@@ -207,6 +210,7 @@ Formato de respuesta obligatorio (JSON puro, sin backticks):
       intent: "objection",
       confidence: 0.3,
       extracted_date: null,
+      extracted_amount: 0,
       summary: "No se pudo clasificar",
     };
   }
