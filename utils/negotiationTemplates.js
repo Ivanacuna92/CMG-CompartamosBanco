@@ -3,6 +3,7 @@
 // Basados en el PDF "Manual de Negociación CREDITO PERSONAL INBURSA"
 
 import { S } from "./negotiationStates.js";
+import { getTodayMX } from "./dateUtils.js";
 
 /**
  * Formatea un monto numérico a formato monetario mexicano
@@ -67,6 +68,14 @@ export function getTemplate(state, registro, extra = {}) {
   const quitaMaxFmt = formatMoney(quita_max);
   const mensualidadFmt = formatMoney(mensualidad);
 
+  // Regla "antes del día X del mes" solo aplica si ese día aún no ha pasado.
+  // Para clientes ya atrasados el único tope real son los 2 días hábiles.
+  const diaPagoNum = parseInt(dia_pago);
+  const dateHint =
+    diaPagoNum && getTodayMX().getDate() < diaPagoNum
+      ? `día hábil, antes del día *${dia_pago}* del mes`
+      : `día hábil, dentro de los próximos 2 días hábiles`;
+
   const templates = {
     // ========================================
     // PRIORIDAD 1: REGULARIZACIÓN
@@ -87,7 +96,7 @@ export function getTemplate(state, registro, extra = {}) {
     [S.P1_OFFER_DAYS]:
       `Entiendo tu situación. Te podemos dar *hasta 2 días hábiles* para reunir el monto de ` +
       `*$${regularizaFmt} MXN*. ¿En qué fecha podrías realizar el pago? ` +
-      `(debe ser día hábil, antes del día *${dia_pago}* del mes).`,
+      `(debe ser ${dateHint}).`,
 
     [S.P1_SCHEDULE_DATE]:
       `Necesito que me confirmes la fecha exacta en que realizarás tu pago de ` +

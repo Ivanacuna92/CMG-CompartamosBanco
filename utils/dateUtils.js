@@ -109,8 +109,11 @@ export function isValidPaymentDate(dateStr, diaPago, maxBusinessDays = 2) {
   }
 
   // Verificar que no rebase el día de pago del mes
+  // Solo aplica si el día de pago del mes en curso aún no ha pasado:
+  // cuando el cliente está atrasado (today.getDate() >= diaPagoNum) el cap real
+  // son los 2 días hábiles de la escalera, no el campo DIA_PAGO.
   const diaPagoNum = parseInt(diaPago);
-  if (diaPagoNum && proposed.getDate() > diaPagoNum) {
+  if (diaPagoNum && today.getDate() < diaPagoNum && proposed.getDate() > diaPagoNum) {
     return {
       valid: false,
       reason: `el pago debe realizarse antes del día ${diaPago} del mes`,

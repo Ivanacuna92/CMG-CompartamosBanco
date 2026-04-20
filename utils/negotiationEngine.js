@@ -365,9 +365,14 @@ function handleDateScheduling(neg, registro, extractedDate, currentState) {
   // Validar fecha (máximo 2 días hábiles, consistente con lo comunicado al cliente)
   const validation = isValidPaymentDate(extractedDate, registro.dia_pago, 2);
   if (!validation.valid) {
+    const diaPagoNum = parseInt(registro.dia_pago);
+    const hint =
+      diaPagoNum && getTodayMX().getDate() < diaPagoNum
+        ? `día hábil, antes del día ${registro.dia_pago} del mes`
+        : `día hábil, dentro de los próximos 2 días hábiles`;
     return (
       `Esa fecha no es válida: ${validation.reason}. ` +
-      `Por favor indica otra fecha (día hábil, antes del día ${registro.dia_pago} del mes).`
+      `Por favor indica otra fecha (${hint}).`
     );
   }
 
