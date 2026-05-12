@@ -1,7 +1,7 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
 
-/* Fondo con gradiente como Inbursa */
+/* Fondo con gradiente Compartamos Banco */
 body { 
   min-height: 100vh; 
   display: flex; 
@@ -29,7 +29,7 @@ body {
 
 /* Header con gradiente */
 .chat-header {
-  background: linear-gradient(to right, #ffffff 40%, #0B0958 100%);
+  background: linear-gradient(to right, #ffffff 40%, #E5097F 100%);
   padding: 20px;
   display: flex;
   align-items: center;
@@ -37,8 +37,8 @@ body {
   z-index: 10;
 }
 
-.logo { 
-  height: 42px; 
+.logo {
+  height: 52px;
 }
 
 /* Mensaje de bienvenida */
@@ -77,19 +77,19 @@ body {
   bottom: 0;
 }
 
-/* Indicador de escritura estilo Inbursa */
-.typing-indicator { 
-  display: none; 
-  align-self: flex-start; 
-  margin-bottom: 10px; 
+/* Indicador de escritura Compartamos Banco */
+.typing-indicator {
+  display: none;
+  align-self: flex-start;
+  margin-bottom: 10px;
 }
 
-.typing-indicator-dots { 
-  background-color: #0B0958; 
-  padding: 12px 16px; 
-  border-radius: 15px; 
-  display: flex; 
-  align-items: center; 
+.typing-indicator-dots {
+  background-color: #E5097F;
+  padding: 12px 16px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
 }
 
 .typing-indicator-dots span { 
@@ -106,7 +106,7 @@ body {
 .typing-indicator-dots span:nth-of-type(3) { animation: 1s blink infinite 0.9999s; }
 @keyframes blink { 50% { opacity: 1; } }
 
-/* Contenedor de input estilo Inbursa - FIJO en la parte inferior */
+/* Contenedor de input - FIJO en la parte inferior */
 .chat-input { 
   display: flex; 
   padding: 15px 20px; 
@@ -130,20 +130,25 @@ body {
   color: #333; 
 }
 
-/* Botón rojo de Inbursa - Ahora con icono */
-#sendBtn { 
-  background: #c90c41; 
-  color: white; 
-  border: none; 
-  width: 45px; /* Ancho fijo para el botón circular */
-  height: 45px; /* Altura fija para el botón circular */
-  border-radius: 50%; /* Botón circular */
-  font-size: 14px; 
-  font-weight: 500; 
-  cursor: pointer; 
+/* Botón magenta de Compartamos Banco */
+#sendBtn {
+  background: #E5097F;
+  color: white;
+  border: none;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background .2s;
+}
+
+#sendBtn:hover {
+  background: #B80766;
 }
 
 /* Icono de enviar */
@@ -176,7 +181,7 @@ body {
   background: transparent;
 }
 
-/* Burbujas de mensaje estilo Inbursa */
+/* Burbujas de mensaje Compartamos Banco */
 .bubble { 
   max-width: 80%; 
   padding: 12px 16px; 
@@ -191,9 +196,9 @@ body {
   border-radius: 15px;
 }
 
-.bot .bubble { 
-  background: #0B0958; 
-  color: white; 
+.bot .bubble {
+  background: #E5097F;
+  color: white;
   border-radius: 15px;
 }
 

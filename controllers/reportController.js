@@ -12,7 +12,7 @@ export async function getSummary(req, res) {
       SUM(IF(payment_agreement=1,1,0)) AS totalAgreements,
       SUM(IFNULL(estimated_recovery,0)) AS totalRecovery,
       SUM(IF(interactions_over_two=1,1,0)) AS overTwo
-    FROM inbursa_conversations
+    FROM compartamos_conversations
     WHERE (? = '' OR MONTH(last_update) = ?)
       AND (? = '' OR DAY(last_update) = ?)
       AND (? = '' OR contract_number = ?)
@@ -26,7 +26,7 @@ export async function listConversations(req, res) {
   const [data] = await pool.query(`
     SELECT SQL_CALC_FOUND_ROWS
       id, uuid, last_update, payment_agreement, estimated_recovery, total_interactions, contract_number
-    FROM inbursa_conversations
+    FROM compartamos_conversations
     WHERE (? = '' OR MONTH(last_update) = ?)
       AND (? = '' OR DAY(last_update) = ?)
       AND (? = '' OR contract_number = ?)
@@ -53,7 +53,7 @@ export async function getConversationMessages(req, res) {
   const { uuid } = req.params;
   const [msgs] = await pool.query(`
     SELECT role, message
-      FROM inbursa_messages
+      FROM compartamos_messages
      WHERE uuid = ?
      ORDER BY created_at
   `, [uuid]);
@@ -64,7 +64,7 @@ export async function exportCsv(req, res) {
   const { month = "", day = "", contract = "" } = req.query;
   const [rows] = await pool.query(`
     SELECT *
-      FROM inbursa_conversations
+      FROM compartamos_conversations
      WHERE (? = '' OR MONTH(last_update) = ?)
        AND (? = '' OR DAY(last_update) = ?)
        AND (? = '' OR contract_number = ?)

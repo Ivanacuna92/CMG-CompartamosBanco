@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inbursa - Bot Pruebas</title>
+  <title>Compartamos Banco - Bot Pruebas</title>
   <link rel="stylesheet"  href="./assets/css/index.css" />
-  <link rel="icon" type="image/jpeg" href="./assets/img/esaclogorr.jpeg" />
+  <link rel="icon" type="image/png" href="./assets/img/Compartamos_banco_logo.png" />
   <style>
     /* Indicador de ambiente de pruebas - Ahora entre el header y el mensaje de bienvenida */
     .test-indicator {
@@ -139,7 +139,7 @@
     }
     
     .modal-button {
-      background-color: #0B0958;
+      background-color: #E5097F;
       color: white;
       border: none;
       padding: 10px 20px;
@@ -181,7 +181,7 @@
       width: 50px;
       height: 50px;
       border: 5px solid #f3f3f3;
-      border-top: 5px solid #0B0958;
+      border-top: 5px solid #E5097F;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 15px;
@@ -214,7 +214,7 @@
         <h2>Ambiente de Pruebas</h2>
       </div>
       <div class="modal-body">
-        <p>Estás utilizando una versión de <strong>prueba</strong> del asistente virtual de Inbursa.</p>
+        <p>Estás utilizando una versión de <strong>prueba</strong> del asistente virtual de Compartamos Banco.</p>
         <p>Este entorno está diseñado exclusivamente para fines de prueba y desarrollo.</p>
         <p><strong>Importante:</strong> Este ambiente no almacena ninguna información. Todos los datos ingresados se perderán al finalizar la sesión.</p>
       </div>
@@ -232,7 +232,7 @@
     </div>
     
     <div class="chat-header">
-      <img src="./assets/img/esaclogo.jpeg" alt="Logo" class="logo">
+      <img src="./assets/img/Compartamos_banco_logo.png" alt="Compartamos Banco" class="logo">
       <button id="resetBtn" class="reset-button">
         <span class="reset-icon"></span>
         Reiniciar
@@ -244,7 +244,7 @@
     
     <!-- Mensaje de bienvenida añadido -->
     <div class="welcome-message">
-      <p>Más de 4 millones de mexicanos ya eligen ganar con Inbursa.</p>
+      <p>Tu asistente virtual de Compartamos Banco.</p>
     </div>
     
     <div class="chat-content">
@@ -376,7 +376,7 @@
       // Si es mensaje del bot, añadir avatar
       if (sender === "bot") {
         const avatar = document.createElement("img");
-        avatar.src = "./assets/img/esaclogorr.jpeg"; // Usar la misma imagen del logo como avatar
+        avatar.src = "./assets/img/Compartamos_banco_logo.png";
         avatar.alt = "Bot Avatar";
         avatar.className = "bot-avatar";
         msgDiv.appendChild(avatar);
@@ -398,7 +398,7 @@
       
       // Añadir avatar para el bot
       const avatar = document.createElement("img");
-      avatar.src = "./assets/img/favicon.png"; // Usar la misma imagen del logo como avatar
+      avatar.src = "./assets/img/Compartamos_banco_logo.png";
       avatar.alt = "Bot Avatar";
       avatar.className = "bot-avatar";
       msgDiv.appendChild(avatar);

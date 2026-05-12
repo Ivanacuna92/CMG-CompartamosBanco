@@ -26,7 +26,7 @@ export async function processChatMessage(req, res) {
 
     // 2) Guardar mensaje del cliente
     await pool.execute(
-      `INSERT INTO inbursa_messages (uuid, message, role, contract)
+      `INSERT INTO compartamos_messages (uuid, message, role, contract)
        VALUES (?, ?, 'Cliente', NULL)`,
       [userId, message]
     );
@@ -37,7 +37,7 @@ export async function processChatMessage(req, res) {
     // 4) Actualizar contract si ya se capturó la cuenta
     if (session.registro?.cuenta) {
       await pool.execute(
-        `UPDATE inbursa_messages
+        `UPDATE compartamos_messages
            SET contract = ?
          WHERE uuid = ?
            AND contract IS NULL`,
@@ -50,7 +50,7 @@ export async function processChatMessage(req, res) {
       ? JSON.stringify(reply)
       : reply;
     await pool.execute(
-      `INSERT INTO inbursa_messages (uuid, message, role, contract)
+      `INSERT INTO compartamos_messages (uuid, message, role, contract)
        VALUES (?, ?, 'Gema', ?)`,
       [userId, content, session.registro?.cuenta || null]
     );
@@ -75,7 +75,7 @@ export async function newChatSession(req, res) {
     const { userId: oldId } = req.body;
     if (oldId) {
       await deleteSession(oldId);
-      await pool.execute(`DELETE FROM inbursa_messages WHERE uuid = ?`, [oldId]);
+      await pool.execute(`DELETE FROM compartamos_messages WHERE uuid = ?`, [oldId]);
     }
 
     // Crear nueva sesión

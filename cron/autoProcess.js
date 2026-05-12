@@ -23,22 +23,22 @@ export function startAutoProcessing() {
   cron.schedule("0 3 * * *", async () => {
     console.log("🔄 Procesando conversaciones a las 03:00am…");
 
-    // 1) Consolidar mensajes de inbursa_messages → inbursa_conversations
+    // 1) Consolidar mensajes de compartamos_messages → compartamos_conversations
     const [groups] = await pool.query(`
       SELECT uuid,
              MAX(contract) AS contract_number,
              GROUP_CONCAT(CONCAT(role, ': ', message) ORDER BY created_at SEPARATOR '\\n') AS conversation,
              COUNT(*) AS total_interactions,
              MAX(created_at) AS last_update
-      FROM inbursa_messages
-      WHERE uuid NOT IN (SELECT uuid FROM inbursa_conversations)
+      FROM compartamos_messages
+      WHERE uuid NOT IN (SELECT uuid FROM compartamos_conversations)
       GROUP BY uuid
     `);
 
     for (const g of groups) {
       const interactionsOverTwo = g.total_interactions > 2 ? 1 : 0;
       await pool.query(
-        `INSERT INTO inbursa_conversations (uuid, contract_number, conversation, total_interactions, interactions_over_two, last_update)
+        `INSERT INTO compartamos_conversations (uuid, contract_number, conversation, total_interactions, interactions_over_two, last_update)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [g.uuid, g.contract_number, g.conversation, g.total_interactions, interactionsOverTwo, g.last_update]
       );
@@ -48,7 +48,7 @@ export function startAutoProcessing() {
     // 2) Traer conversaciones no procesadas
     const [rows] = await pool.query(`
       SELECT id, conversation, contract_number
-      FROM inbursa_conversations
+      FROM compartamos_conversations
       WHERE payment_agreement IS NULL
     `);
 
@@ -74,7 +74,7 @@ export function startAutoProcessing() {
 
         // 5) Actualizar la conversación
         await pool.query(
-          `UPDATE inbursa_conversations
+          `UPDATE compartamos_conversations
            SET payment_agreement = ?,
                estimated_recovery = ?
            WHERE id = ?`,
@@ -84,7 +84,7 @@ export function startAutoProcessing() {
         // 6) Marcar anteriores como renegociadas
         if (convo.contract_number) {
           await pool.query(
-            `UPDATE inbursa_conversations
+            `UPDATE compartamos_conversations
              SET payment_agreement = 2
              WHERE contract_number = ?
                AND id <> ?

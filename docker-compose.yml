@@ -1,22 +1,11 @@
 version: "3.8"
 
 services:
-  esac-inbursa:
+  cmg-compartamosbanco:
     build: .
-    container_name: esac-inbursa
+    container_name: cmg-compartamosbanco
     ports:
       - "9666:9666"
-    environment:
-      - PORT=9666
-      - DEEPSEEK_API_KEY=sk-c7986c5c57dc4ea8a161cb06361d3b8d
-      - DB_HOST=datenbanken.aloia.dev
-      - DB_PORT=3306
-      - DB_NAME=aloiaEsacBotDB
-      - DB_USER=aloiaMariaDB
-      - DB_PASSWORD=aloiaMariaDB-17.59*2025!
-      - DB_c_HOST=187.248.37.202
-      - DB_c_PORT=3306
-      - DB_c_NAME=esac
-      - DB_c_USER=Esac
-      - DB_c_PASSWORD=6768Pker/821.
+    env_file:
+      - .env
     restart: unless-stopped

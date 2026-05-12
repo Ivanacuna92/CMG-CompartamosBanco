@@ -37,7 +37,7 @@ function horaMX() {
 
   const [rows] = await pool.query(`
     SELECT id, conversation, contract_number
-    FROM inbursa_conversations
+    FROM compartamos_conversations
     WHERE payment_agreement IS NULL
   `);
 
@@ -46,7 +46,7 @@ function horaMX() {
       const contrato = convo.contract_number?.trim();
       if (!contrato) {
         await pool.query(
-          `UPDATE inbursa_conversations
+          `UPDATE compartamos_conversations
            SET payment_agreement = 0,
                estimated_recovery = 0
            WHERE id = ?`,
@@ -76,7 +76,7 @@ function horaMX() {
 
       // Actualizar conversación
       await pool.query(
-        `UPDATE inbursa_conversations
+        `UPDATE compartamos_conversations
          SET payment_agreement = ?,
              estimated_recovery = ?
          WHERE id = ?`,
@@ -85,7 +85,7 @@ function horaMX() {
 
       // Marcar otras del mismo contrato como renegociadas
       await pool.query(
-        `UPDATE inbursa_conversations
+        `UPDATE compartamos_conversations
          SET payment_agreement = 2
          WHERE contract_number = ?
            AND id <> ?

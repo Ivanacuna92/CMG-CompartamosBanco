@@ -15,7 +15,7 @@ const db = new sqlite3.Database("./esac.db", (err) => {
 });
 
 db.run(`
-  CREATE TABLE IF NOT EXISTS inbursa_messages (
+  CREATE TABLE IF NOT EXISTS compartamos_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uuid TEXT,
     message TEXT,
@@ -42,7 +42,7 @@ export async function processChatMessageSQLite(req, res) {
 
     // 2) Insertar mensaje del cliente
     db.run(
-      `INSERT INTO inbursa_messages (uuid, message, role, contract)
+      `INSERT INTO compartamos_messages (uuid, message, role, contract)
        VALUES (?, ?, 'Cliente', NULL)`,
       [userId, message],
       (err) => {
@@ -56,7 +56,7 @@ export async function processChatMessageSQLite(req, res) {
     // 4) Actualizar contrato si ya se capturó la cuenta
     if (session.registro?.cuenta) {
       db.run(
-        `UPDATE inbursa_messages
+        `UPDATE compartamos_messages
          SET contract = ?
          WHERE uuid = ? AND contract IS NULL`,
         [session.registro.cuenta, userId],
@@ -72,7 +72,7 @@ export async function processChatMessageSQLite(req, res) {
       : reply;
 
     db.run(
-      `INSERT INTO inbursa_messages (uuid, message, role, contract)
+      `INSERT INTO compartamos_messages (uuid, message, role, contract)
        VALUES (?, ?, 'Gema', ?)`,
       [userId, content, session.registro?.cuenta || null],
       (err) => {
@@ -97,7 +97,7 @@ export async function newChatSessionSQLite(req, res) {
     const { userId: oldId } = req.body;
     if (oldId) {
       await deleteSession(oldId);
-      db.run(`DELETE FROM inbursa_messages WHERE uuid = ?`, [oldId], (err) => {
+      db.run(`DELETE FROM compartamos_messages WHERE uuid = ?`, [oldId], (err) => {
         if (err) console.error("❌ Error al borrar mensajes:", err);
       });
     }
