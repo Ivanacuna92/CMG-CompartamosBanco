@@ -1,14 +1,21 @@
 // utils/dbUsers.js
-import { clientePool } from "../db/configs.js";
+// Mientras no haya acceso a la BD del cliente, leemos de un JSON mock.
+import { readFileSync } from "fs";
+import path from "path";
 import { normalizeText } from "./processMessage.js";
 
-// Genera las condiciones OR para buscar en TELEFONO1..TELEFONO13
-const PHONE_COLUMNS = Array.from({ length: 13 }, (_, i) => `TELEFONO${i + 1}`);
-const PHONE_WHERE = PHONE_COLUMNS.map(col => `\`${col}\` = ?`).join(" OR ");
+const MOCK_PATH = path.join(process.cwd(), "data", "clientes.mock.json");
+const clientes = JSON.parse(readFileSync(MOCK_PATH, "utf-8"));
+console.log(`📁 Catálogo de clientes (mock): ${clientes.length} registros cargados desde ${MOCK_PATH}`);
 
-/**
- * Convierte una fila de la BD al formato de registro que usa el resto de la app
- */
+function matchPhone(row, phone) {
+  for (let i = 1; i <= 13; i++) {
+    const v = String(row[`TELEFONO${i}`] || "").replace(/\D/g, "");
+    if (v && v === phone) return true;
+  }
+  return false;
+}
+
 function rowToRegistro(row) {
   return {
     nombre:          String(row.NOMBRE || "").trim(),
@@ -26,97 +33,53 @@ function rowToRegistro(row) {
   };
 }
 
-/**
- * Verifica si existe un cliente con el teléfono o correo proporcionado
- */
 export async function checkContactExists(method, contact) {
   const valor = contact.trim().toLowerCase();
   console.log("🔍 [checkContactExists] Verificando:", method, valor);
 
-  try {
-    let rows;
-    if (method === "telefono") {
-      const phone = valor.replace(/\D/g, "");
-      const params = Array(13).fill(phone);
-      [rows] = await clientePool.query(
-        `SELECT 1 FROM cpi_pv WHERE ${PHONE_WHERE} LIMIT 1`,
-        params
-      );
-    } else {
-      [rows] = await clientePool.query(
-        `SELECT 1 FROM cpi_pv WHERE CORREO = ? LIMIT 1`,
-        [valor]
-      );
-    }
-
-    const existe = rows.length > 0;
-    console.log(`${existe ? "✅" : "❌"} [checkContactExists] ${method === "telefono" ? "Teléfono" : "Correo"} ${existe ? "encontrado" : "NO encontrado"}`);
-    return existe;
-  } catch (err) {
-    console.error("❌ [checkContactExists] Error en consulta:", err.message);
-    return false;
+  let existe;
+  if (method === "telefono") {
+    const phone = valor.replace(/\D/g, "");
+    existe = clientes.some(r => matchPhone(r, phone));
+  } else {
+    existe = clientes.some(r => String(r.CORREO || "").trim().toLowerCase() === valor);
   }
+
+  console.log(`${existe ? "✅" : "❌"} [checkContactExists] ${method === "telefono" ? "Teléfono" : "Correo"} ${existe ? "encontrado" : "NO encontrado"}`);
+  return existe;
 }
 
-/**
- * Busca un cliente por teléfono/correo y nombre normalizado
- */
 export async function getUserByValidation(method, contact, nombreNormalizado) {
   const valor = contact.trim().toLowerCase();
   console.log("🔍 [getUserByValidation] Buscando:", method, valor, "nombre:", nombreNormalizado);
 
-  try {
-    let rows;
-    if (method === "telefono") {
-      const phone = valor.replace(/\D/g, "");
-      const params = Array(13).fill(phone);
-      [rows] = await clientePool.query(
-        `SELECT * FROM cpi_pv WHERE ${PHONE_WHERE}`,
-        params
-      );
-    } else {
-      [rows] = await clientePool.query(
-        `SELECT * FROM cpi_pv WHERE CORREO = ?`,
-        [valor]
-      );
-    }
-
-    console.log(`📊 [getUserByValidation] ${rows.length} registros con ese ${method}`);
-
-    for (const row of rows) {
-      const nombreDB = normalizeText(String(row.NOMBRE || "").trim());
-
-      // Comparar por conjunto de palabras (sin importar orden)
-      const wordsDB = nombreDB.split(" ").filter(w => w).sort().join(" ");
-      const wordsUser = nombreNormalizado.split(" ").filter(w => w).sort().join(" ");
-
-      console.log(`   🔎 Comparando: "${nombreDB}" vs "${nombreNormalizado}" (palabras: "${wordsDB}" vs "${wordsUser}") → ${wordsDB === wordsUser}`);
-      if (wordsDB === wordsUser) {
-        console.log("✅ [getUserByValidation] Usuario encontrado:", row.NOMBRE);
-        return rowToRegistro(row);
-      }
-    }
-
-    console.log("❌ [getUserByValidation] No se encontró usuario con ese nombre");
-    return null;
-  } catch (err) {
-    console.error("❌ [getUserByValidation] Error en consulta:", err.message);
-    return null;
+  let candidatos;
+  if (method === "telefono") {
+    const phone = valor.replace(/\D/g, "");
+    candidatos = clientes.filter(r => matchPhone(r, phone));
+  } else {
+    candidatos = clientes.filter(r => String(r.CORREO || "").trim().toLowerCase() === valor);
   }
+
+  console.log(`📊 [getUserByValidation] ${candidatos.length} registros con ese ${method}`);
+
+  for (const row of candidatos) {
+    const nombreDB = normalizeText(String(row.NOMBRE || "").trim());
+    const wordsDB = nombreDB.split(" ").filter(w => w).sort().join(" ");
+    const wordsUser = nombreNormalizado.split(" ").filter(w => w).sort().join(" ");
+    console.log(`   🔎 Comparando: "${nombreDB}" vs "${nombreNormalizado}" → ${wordsDB === wordsUser}`);
+    if (wordsDB === wordsUser) {
+      console.log("✅ [getUserByValidation] Usuario encontrado:", row.NOMBRE);
+      return rowToRegistro(row);
+    }
+  }
+
+  console.log("❌ [getUserByValidation] No se encontró usuario con ese nombre");
+  return null;
 }
 
-/**
- * Busca un cliente por número de crédito
- */
 export async function getUserByCredito(credito) {
-  try {
-    const [rows] = await clientePool.query(
-      `SELECT * FROM cpi_pv WHERE CREDITO = ? LIMIT 1`,
-      [String(credito).trim()]
-    );
-    return rows.length > 0 ? rowToRegistro(rows[0]) : null;
-  } catch (err) {
-    console.error("❌ [getUserByCredito] Error en consulta:", err.message);
-    return null;
-  }
+  const target = String(credito).trim();
+  const row = clientes.find(r => String(r.CREDITO || "").trim() === target);
+  return row ? rowToRegistro(row) : null;
 }
