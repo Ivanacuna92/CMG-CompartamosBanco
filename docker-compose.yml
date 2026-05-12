@@ -5,7 +5,18 @@ services:
     build: .
     container_name: cmg-compartamosbanco
     ports:
-      - "9666:9666"
-    env_file:
-      - .env
+      - "1018:1018"
+    environment:
+      - PORT=${PORT}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_c_HOST=${DB_c_HOST}
+      - DB_c_PORT=${DB_c_PORT}
+      - DB_c_NAME=${DB_c_NAME}
+      - DB_c_USER=${DB_c_USER}
+      - DB_c_PASSWORD=${DB_c_PASSWORD}
     restart: unless-stopped
