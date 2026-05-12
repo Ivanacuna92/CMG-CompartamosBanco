@@ -1,6 +1,6 @@
 // utils/negotiationTemplates.js
 // Mensajes template para la Escalera de Negociación CPI-IA
-// Basados en el PDF "Manual de Negociación CREDITO PERSONAL INBURSA"
+// Basados en el manual de Negociación de Crédito Personal Compartamos Banco
 
 import { S } from "./negotiationStates.js";
 import { getTodayMX } from "./dateUtils.js";
@@ -20,7 +20,7 @@ export function formatMoney(amount) {
  */
 function paymentMethods(cuenta, clabe) {
   return (
-    `El pago lo debes de realizar directamente en las sucursales o módulos de Banco Inbursa ` +
+    `El pago lo debes de realizar directamente en las sucursales de Compartamos Banco ` +
     `a los 10 dígitos de tu número de crédito *${cuenta}* o a través de cualquier banca ` +
     `móvil como pago SPEI a la cuenta CLABE *${clabe}*.\n\n` +
     `Importante reportar tu comprobante de pago por este medio o al teléfono *5635519617* ` +
@@ -33,11 +33,11 @@ function paymentMethods(cuenta, clabe) {
  */
 function paymentMethodsDocs(cuenta, clabe) {
   return (
-    `El pago lo debes de realizar directamente en las sucursales o módulos de Banco Inbursa ` +
+    `El pago lo debes de realizar directamente en las sucursales de Compartamos Banco ` +
     `a los 10 dígitos de tu número de crédito *${cuenta}* o a través de cualquier banca ` +
     `móvil como pago SPEI a la cuenta CLABE *${clabe}*.\n\n` +
     `Con este pago liquidas tu deuda en convenio de pago menor, se actualiza tu buró de ` +
-    `crédito y Banco Inbursa te hace entrega de tu carta de no adeudo.\n\n` +
+    `crédito y Compartamos Banco te hace entrega de tu carta de no adeudo.\n\n` +
     `Importante reportar los documentos requeridos: *Convenio de pago firmado* (lo recibes el día ` +
     `de mañana), tu *comprobante de pago* e *INE por ambos lados* en imágenes legibles vía ` +
     `WhatsApp al teléfono *5635519617* para poder concluir la liquidación de tu deuda.`
@@ -210,7 +210,7 @@ export function formatInstallmentMessage(schedule, cuenta, clabe) {
 
   return (
     `Tu plan de pagos queda así:\n\n${lines}\n\n` +
-    `Los pagos los debes de realizar directamente en las sucursales o módulos de Banco Inbursa ` +
+    `Los pagos los debes de realizar directamente en las sucursales de Compartamos Banco ` +
     `a los 10 dígitos de tu número de crédito *${cuenta}* o a través de cualquier banca ` +
     `móvil como pago SPEI a la cuenta CLABE *${clabe}*.\n\n` +
     `Recuerda realizar tu primer pago en la fecha indicada. Al aplicarlo y ` +
@@ -231,7 +231,7 @@ export function formatInstallmentMessage(schedule, cuenta, clabe) {
 export function formatScheduledPaymentMessage(dateFormatted, amount, cuenta, clabe) {
   return (
     `Perfecto, agendamos tu pago para el *${dateFormatted}* por *$${amount} MXN*.\n\n` +
-    `El pago lo debes de realizar directamente en las sucursales o módulos de Banco Inbursa ` +
+    `El pago lo debes de realizar directamente en las sucursales de Compartamos Banco ` +
     `a los 10 dígitos de tu número de crédito *${cuenta}* o a través de cualquier banca ` +
     `móvil como pago SPEI a la cuenta CLABE *${clabe}*.\n\n` +
     `Con este pago te pones al corriente y evitas generar más intereses, así como la comisión ` +

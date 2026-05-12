@@ -174,7 +174,7 @@ export async function processMessage(session, userMessage) {
 
     // Saludo inicial + primera oferta de la escalera
     const saludo = `Hola ${registro.nombre}, espero que te encuentres bien. ` +
-      `Te contacto respecto a tu crédito personal Inbursa *${registro.cuenta}*.\n\n`;
+      `Te contacto respecto a tu crédito personal Compartamos Banco *${registro.cuenta}*.\n\n`;
     const primeraOferta = getTemplate(session.negotiation.state, registro);
     const reply = saludo + primeraOferta;
 
